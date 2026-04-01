@@ -27,7 +27,7 @@ export function SudokuCell({ index, isFlashing }: Props) {
   const borderLeft = col === 0 ? 'border-l-2' : col === 3 || col === 6 ? 'border-l-2' : 'border-l'
 
   let bgClass = 'bg-(--color-surface)'
-  if (isFlashing) bgClass = 'bg-(--color-primary)'
+  if (isFlashing) bgClass = 'bg-amber-400 dark:bg-amber-500'
   else if (highlight === 'error') bgClass = 'bg-(--color-cell-error-bg)'
   else if (highlight === 'selected') bgClass = 'bg-(--color-cell-selected)'
   else if (highlight === 'same-number') bgClass = 'bg-(--color-cell-same-number)'
@@ -58,7 +58,7 @@ export function SudokuCell({ index, isFlashing }: Props) {
       {cell.value !== null ? (
         <span
           className={[
-            'text-[clamp(14px,2.8vmin,24px)] leading-none',
+            'text-[clamp(16px,3.4vmin,28px)] leading-none',
             textClass,
           ].join(' ')}
         >

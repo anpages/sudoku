@@ -8,7 +8,7 @@ import { CompletionModal } from './CompletionModal'
 import { useGameStore } from '@/store/game-store'
 import { useTimerStore } from '@/store/timer-store'
 import { useKeyboard } from '@/hooks/useKeyboard'
-import { formatTime } from '@/shared/scoring'
+import { formatTime, calculateAdjustedTime } from '@/shared/scoring'
 import { DIFFICULTY_CONFIG } from '@/shared/constants'
 import { api } from '@/lib/api'
 import type { Difficulty, CompletionResult } from '@/shared/types'
@@ -32,6 +32,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
 
   const elapsed = useTimerStore((s) => s.elapsed)
   const startTimer = useTimerStore((s) => s.start)
+  const pauseTimer = useTimerStore((s) => s.pause)
   const resetTimer = useTimerStore((s) => s.reset)
 
   const [completionResult, setCompletionResult] = useState<CompletionResult | null>(null)
@@ -51,6 +52,9 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
   useEffect(() => {
     if (status !== 'complete') return
 
+    // Parar el cronómetro inmediatamente
+    pauseTimer()
+
     async function submit() {
       setSyncing(true)
       const board = cells.map((c) => c.value ?? 0).join('')
@@ -64,7 +68,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         })
         setCompletionResult(result)
       } catch {
-        // silent
+        // El modal se muestra igualmente con datos locales
       } finally {
         setSyncing(false)
       }
@@ -134,14 +138,14 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         <NumberPad />
       </div>
 
-      {status === 'complete' && !syncing && completionResult && (
+      {status === 'complete' && !syncing && (
         <CompletionModal
           difficulty={difficulty}
           elapsedSeconds={elapsed}
           hintsUsed={hintsUsed}
           errorsMade={errors}
-          adjustedTime={completionResult.adjustedTime}
-          rank={completionResult.dailyRank ?? completionResult.rank}
+          adjustedTime={completionResult?.adjustedTime ?? calculateAdjustedTime(elapsed, hintsUsed, errors)}
+          rank={completionResult?.dailyRank ?? completionResult?.rank ?? null}
           onPlayAgain={() => handleRestart()}
           onHome={() => navigate('/')}
         />
