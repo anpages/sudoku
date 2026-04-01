@@ -3,9 +3,13 @@ import { requireAuth, errorResponse } from '../lib/middleware.js'
 import { verifySessionToken, validateElapsedTime } from '../lib/anti-cheat.js'
 import { db } from '../lib/db.js'
 import { puzzles, puzzleSessions, completions, weeklyRankings } from '../../drizzle/schema.js'
-import { eq, and, asc } from 'drizzle-orm'
-import { calculateAdjustedTime } from '../../src/shared/scoring.js'
-import { sql } from 'drizzle-orm'
+import { eq, and, asc, sql } from 'drizzle-orm'
+
+const HINT_PENALTY = 30
+const ERROR_PENALTY = 15
+function calculateAdjustedTime(elapsed: number, hints: number, errors: number) {
+  return elapsed + hints * HINT_PENALTY + errors * ERROR_PENALTY
+}
 
 function getWeekStart(date: Date): string {
   const d = new Date(date)
