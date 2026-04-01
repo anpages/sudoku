@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { GameScreen } from '@/components/game/GameScreen'
 import { Header } from '@/components/layout/Header'
 import { api } from '@/lib/api'
+import { useGameStore } from '@/store/game-store'
 import type { DailyPuzzle } from '@/shared/types'
 
 export function Daily() {
@@ -88,11 +89,21 @@ function DailyGameLoader({ daily }: { daily: DailyPuzzle }) {
   if (!session) return null
 
   return (
-    <GameScreen
+    <DailyGameScreen
       givens={daily.givens}
       puzzleId={daily.puzzleId}
       sessionToken={session.sessionToken}
       difficulty={daily.difficulty}
     />
   )
+}
+
+/** Wraps GameScreen and marks the game as daily in the store */
+function DailyGameScreen(props: { givens: string; puzzleId: string; sessionToken: string; difficulty: import('@/shared/types').Difficulty }) {
+  useEffect(() => {
+    // Mark as daily after GameScreen's initGame runs
+    useGameStore.setState({ isDaily: true })
+  }, [])
+
+  return <GameScreen {...props} />
 }

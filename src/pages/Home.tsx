@@ -1,41 +1,18 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { DIFFICULTY_CONFIG } from '@/shared/constants'
 import type { Difficulty } from '@/shared/types'
 import { useGameStore } from '@/store/game-store'
 import { Header } from '@/components/layout/Header'
+import { api } from '@/lib/api'
 
 const DIFFICULTY_KEYS = Object.keys(DIFFICULTY_CONFIG) as Difficulty[]
 
-const DESCRIPTIONS: Record<Difficulty, string> = {
-  facil:   'Perfecto para empezar',
-  medio:   'Un reto equilibrado',
-  dificil: 'Requiere concentración',
-  experto: 'Para mentes ágiles',
-  maestro: 'Un verdadero desafío',
-  extremo: 'Solo para expertos',
-}
-
-const LEVEL: Record<Difficulty, number> = {
-  facil: 1, medio: 2, dificil: 3, experto: 4, maestro: 5, extremo: 6,
-}
-
-function DifficultyBars({ level, color }: { level: number; color: string }) {
-  return (
-    <div className="flex items-end gap-[3px]">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div
-          key={i}
-          className="w-[5px] rounded-sm"
-          style={{
-            height: `${8 + i * 2}px`,
-            backgroundColor: color,
-            opacity: i <= level ? 1 : 0.18,
-          }}
-        />
-      ))}
-    </div>
-  )
+interface TodayStats {
+  gamesToday: number
+  weeklyRank: number | null
+  weeklyTotal: number
 }
 
 function DiceIcon() {
@@ -59,27 +36,36 @@ function ChevronRight() {
   )
 }
 
-const listVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.05 } },
-}
-const itemVariant = {
-  hidden: { opacity: 0, x: 10 },
-  show:   { opacity: 1, x: 0,  transition: { duration: 0.2 } },
-}
-
 export function Home() {
   const navigate = useNavigate()
   const savedStatus = useGameStore((s) => s.status)
   const savedDifficulty = useGameStore((s) => s.difficulty)
+  const savedIsDaily = useGameStore((s) => s.isDaily)
   const hasSavedGame = (savedStatus === 'playing' || savedStatus === 'paused') && savedDifficulty
+
+  const [selectedDiff, setSelectedDiff] = useState<Difficulty>('medio')
+  const [stats, setStats] = useState<TodayStats | null>(null)
+
+  useEffect(() => {
+    api.get<TodayStats>('/api/user/today-stats')
+      .then(setStats)
+      .catch(() => {})
+  }, [])
+
+  function handlePlay() {
+    navigate(`/juego/${selectedDiff}`)
+  }
 
   function handleRandom() {
     const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
     navigate(`/juego/${key}`)
   }
 
-  // ── Sub-componentes reutilizables ─────────────────────────────────────────
+  const continueLabel = savedIsDaily
+    ? 'Continuar reto diario'
+    : `Continuar partida · ${DIFFICULTY_CONFIG[savedDifficulty!]?.label ?? ''}`
+
+  // ── Sub-componentes ─────────────────────────────────────────
 
   const heroBlock = (
     <motion.div
@@ -96,30 +82,83 @@ export function Home() {
       {hasSavedGame && (
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => navigate(`/juego/${savedDifficulty}`, { state: { resume: true } })}
+          onClick={() => {
+            if (savedIsDaily) navigate('/diario')
+            else navigate(`/juego/${savedDifficulty}`, { state: { resume: true } })
+          }}
           className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-(--color-primary) text-white text-base font-bold shadow-lg hover:opacity-90 transition-opacity"
         >
           <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
             <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
           </svg>
-          Continuar partida
+          {continueLabel}
         </motion.button>
       )}
+
+      {/* Difficulty selector + play */}
+      <div className="flex gap-2">
+        <select
+          value={selectedDiff}
+          onChange={(e) => setSelectedDiff(e.target.value as Difficulty)}
+          className="flex-1 py-3.5 px-4 rounded-xl border border-(--color-border) bg-(--color-surface) text-(--color-text) text-sm font-semibold appearance-none cursor-pointer focus:outline-none focus:border-(--color-primary)"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 12px center',
+          }}
+        >
+          {DIFFICULTY_KEYS.map((key) => (
+            <option key={key} value={key}>{DIFFICULTY_CONFIG[key].label}</option>
+          ))}
+        </select>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handlePlay}
+          className={[
+            'px-6 py-3.5 rounded-xl text-base font-bold transition-opacity hover:opacity-90',
+            hasSavedGame
+              ? 'border border-(--color-border) bg-(--color-surface) text-(--color-text)'
+              : 'bg-(--color-primary) text-white shadow-lg',
+          ].join(' ')}
+        >
+          Jugar
+        </motion.button>
+      </div>
 
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={handleRandom}
-        className={[
-          'flex items-center justify-center gap-2.5 py-4 rounded-2xl text-base font-bold transition-opacity hover:opacity-90',
-          hasSavedGame
-            ? 'border border-(--color-border) bg-(--color-surface) text-(--color-text)'
-            : 'bg-(--color-primary) text-white shadow-lg',
-        ].join(' ')}
+        className="flex items-center justify-center gap-2.5 py-3 rounded-xl border border-(--color-border) bg-(--color-surface) text-(--color-text) text-sm font-semibold hover:bg-(--color-surface-alt) transition-colors"
       >
         <DiceIcon />
         Partida rápida
       </motion.button>
-      <p className="text-xs text-(--color-text-muted) text-center -mt-1">Dificultad aleatoria</p>
+    </motion.div>
+  )
+
+  const statsBlock = stats && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.15, duration: 0.3 }}
+      className="grid grid-cols-2 gap-3"
+    >
+      <div className="flex items-center gap-3 p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
+        <span className="text-2xl">🎮</span>
+        <div>
+          <p className="text-lg font-bold text-(--color-text)">{stats.gamesToday}</p>
+          <p className="text-xs text-(--color-text-muted)">Partidas hoy</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
+        <span className="text-2xl">🏆</span>
+        <div>
+          <p className="text-lg font-bold text-(--color-text)">
+            {stats.weeklyRank ? `#${stats.weeklyRank}` : '—'}
+          </p>
+          <p className="text-xs text-(--color-text-muted)">Ranking semanal</p>
+        </div>
+      </div>
     </motion.div>
   )
 
@@ -162,42 +201,11 @@ export function Home() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-(--color-text) text-sm">Rankings</p>
-          <p className="text-xs text-(--color-text-muted)">Clasificación diaria y semanal</p>
+          <p className="text-xs text-(--color-text-muted)">Clasificación semanal</p>
         </div>
         <ChevronRight />
       </button>
     </motion.div>
-  )
-
-  const difficultyBlock = (
-    <div className="flex flex-col gap-3">
-      <p className="text-xs font-semibold uppercase tracking-widest text-(--color-text-muted) px-1">
-        Elegir dificultad
-      </p>
-      <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-2">
-        {DIFFICULTY_KEYS.map((key) => {
-          const cfg = DIFFICULTY_CONFIG[key]
-          return (
-            <motion.button
-              key={key}
-              variants={itemVariant}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(`/juego/${key}`)}
-              className="group flex items-center gap-4 px-4 py-3.5 rounded-xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) hover:border-[var(--diff-color)] transition-all text-left"
-              style={{ '--diff-color': cfg.color } as React.CSSProperties}
-            >
-              <div className="w-1 h-10 rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-(--color-text) text-sm leading-tight">{cfg.label}</p>
-                <p className="text-xs text-(--color-text-muted) mt-0.5">{DESCRIPTIONS[key]}</p>
-              </div>
-              <DifficultyBars level={LEVEL[key]} color={cfg.color} />
-              <ChevronRight />
-            </motion.button>
-          )
-        })}
-      </motion.div>
-    </div>
   )
 
   return (
@@ -207,23 +215,23 @@ export function Home() {
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-10">
 
         {/* ── Mobile: columna única ── */}
-        <div className="flex flex-col gap-8 lg:hidden max-w-md mx-auto">
+        <div className="flex flex-col gap-6 lg:hidden max-w-md mx-auto">
           {heroBlock}
-          {difficultyBlock}
+          {statsBlock}
           {secondaryBlock}
         </div>
 
         {/* ── Desktop: dos columnas ── */}
         <div className="hidden lg:grid grid-cols-[340px_1fr] gap-16 items-start">
-          {/* Columna izquierda: hero + CTA + acciones secundarias */}
+          {/* Columna izquierda: hero + CTA */}
           <div className="flex flex-col gap-6 sticky top-24">
             {heroBlock}
-            {secondaryBlock}
           </div>
 
-          {/* Columna derecha: selector de dificultad */}
-          <div>
-            {difficultyBlock}
+          {/* Columna derecha: stats + acciones secundarias */}
+          <div className="flex flex-col gap-6">
+            {statsBlock}
+            {secondaryBlock}
           </div>
         </div>
 

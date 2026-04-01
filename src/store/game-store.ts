@@ -16,7 +16,8 @@ interface GameStore {
   sessionToken: string | null
   difficulty: Difficulty | null
   givens: string | null
-  flashingIndex: number | null  // 0-80, null = not flashing
+  isDaily: boolean
+  flashingCells: number[] | null  // indices to flash, null = not flashing
   locked: boolean               // true during flash or when paused
 
   // Actions
@@ -61,6 +62,41 @@ export function isPeer(a: number, b: number) {
   return ar === br || ac === bc || isSameBox(a, b)
 }
 
+/** Collect all cell indices that belong to newly-completed groups (digit×9, row, box). */
+function getCompletedCells(cells: CellState[], placedIndex: number): number[] {
+  const flashSet = new Set<number>()
+  const digit = cells[placedIndex].value
+
+  // 1. All 9 of this digit placed
+  if (digit !== null) {
+    const indices = cells.reduce<number[]>((acc, c, i) => { if (c.value === digit) acc.push(i); return acc }, [])
+    if (indices.length === 9) for (const i of indices) flashSet.add(i)
+  }
+
+  // 2. Row complete
+  const row = Math.floor(placedIndex / 9)
+  const rowStart = row * 9
+  const rowCells = Array.from({ length: 9 }, (_, i) => rowStart + i)
+  if (rowCells.every((i) => cells[i].value !== null)) {
+    for (const i of rowCells) flashSet.add(i)
+  }
+
+  // 3. Box complete
+  const boxRow = Math.floor(row / 3) * 3
+  const boxCol = Math.floor((placedIndex % 9) / 3) * 3
+  const boxCells: number[] = []
+  for (let r = boxRow; r < boxRow + 3; r++) {
+    for (let c = boxCol; c < boxCol + 3; c++) {
+      boxCells.push(r * 9 + c)
+    }
+  }
+  if (boxCells.every((i) => cells[i].value !== null)) {
+    for (const i of boxCells) flashSet.add(i)
+  }
+
+  return Array.from(flashSet)
+}
+
 /** Recompute isError for every non-given cell based on peer conflicts. */
 function recomputeConflicts(cells: CellState[]): CellState[] {
   return cells.map((c, i) => {
@@ -85,7 +121,8 @@ export const useGameStore = create<GameStore>()(
   sessionToken: null,
   difficulty: null,
   givens: null,
-  flashingIndex: null,
+  isDaily: false,
+  flashingCells: null,
   locked: false,
 
   initGame: ({ givens, puzzleId, sessionToken, difficulty }) => {
@@ -100,7 +137,8 @@ export const useGameStore = create<GameStore>()(
       sessionToken,
       difficulty,
       givens,
-      flashingIndex: null,
+      isDaily: false,
+      flashingCells: null,
       locked: false,
     })
   },
@@ -150,11 +188,11 @@ export const useGameStore = create<GameStore>()(
       }
     }
 
-    // Check if this digit is now fully placed (all 9 instances)
-    const count = withConflicts.filter((c) => c.value === digit).length
-    if (count === 9) {
-      set({ flashingIndex: selected, locked: true })
-      setTimeout(() => set({ flashingIndex: null, locked: false }), FLASH_DURATION_MS)
+    // Check for completed groups (digit×9, row, box)
+    const completed = getCompletedCells(withConflicts, selected)
+    if (completed.length > 0) {
+      set({ flashingCells: completed, locked: true })
+      setTimeout(() => set({ flashingCells: null, locked: false }), FLASH_DURATION_MS)
     }
 
     // Check completion: all filled AND no conflicts anywhere on the board
@@ -235,7 +273,8 @@ export const useGameStore = create<GameStore>()(
     sessionToken: null,
     difficulty: null,
     givens: null,
-    flashingIndex: null,
+    isDaily: false,
+    flashingCells: null,
     locked: false,
   }),
   }),
@@ -252,6 +291,7 @@ export const useGameStore = create<GameStore>()(
       sessionToken: state.sessionToken,
       difficulty: state.difficulty,
       givens: state.givens,
+      isDaily: state.isDaily,
     }),
   }
   )
