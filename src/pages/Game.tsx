@@ -4,6 +4,7 @@ import { GameScreen } from '@/components/game/GameScreen'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Header } from '@/components/layout/Header'
 import { api } from '@/lib/api'
+import { useGameStore } from '@/store/game-store'
 import type { Difficulty, PuzzleSession } from '@/shared/types'
 import { DIFFICULTY_CONFIG } from '@/shared/constants'
 
@@ -19,6 +20,24 @@ export function Game() {
   useEffect(() => {
     if (!diff || !DIFFICULTY_CONFIG[diff]) {
       navigate('/', { replace: true })
+      return
+    }
+
+    // Restore saved game if same difficulty and still in progress
+    const saved = useGameStore.getState()
+    if (
+      (saved.status === 'playing' || saved.status === 'paused') &&
+      saved.difficulty === diff &&
+      saved.puzzleId && saved.sessionToken && saved.givens
+    ) {
+      setSession({
+        givens: saved.givens,
+        puzzleId: saved.puzzleId,
+        sessionToken: saved.sessionToken,
+        difficulty: saved.difficulty!,
+        startedAt: Date.now(),
+      })
+      setLoading(false)
       return
     }
 

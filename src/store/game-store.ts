@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { CellState, Difficulty } from '@/shared/types'
 import { MAX_ERRORS, FLASH_DURATION_MS } from '@/shared/constants'
 
@@ -14,6 +15,7 @@ interface GameStore {
   puzzleId: string | null
   sessionToken: string | null
   difficulty: Difficulty | null
+  givens: string | null
   flashingDigit: number | null  // 1-9, null = not flashing
   locked: boolean               // true during flash or when paused
 
@@ -59,7 +61,20 @@ export function isPeer(a: number, b: number) {
   return ar === br || ac === bc || isSameBox(a, b)
 }
 
-export const useGameStore = create<GameStore>()((set, get) => ({
+/** Recompute isError for every non-given cell based on peer conflicts. */
+function recomputeConflicts(cells: CellState[]): CellState[] {
+  return cells.map((c, i) => {
+    if (c.value === null || c.isGiven) return c.isError ? { ...c, isError: false } : c
+    const hasConflict = cells.some(
+      (other, j) => j !== i && isPeer(i, j) && other.value === c.value,
+    )
+    return c.isError !== hasConflict ? { ...c, isError: hasConflict } : c
+  })
+}
+
+export const useGameStore = create<GameStore>()(
+  persist(
+  (set, get) => ({
   cells: [],
   selected: null,
   pencilMode: false,
@@ -69,6 +84,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
   puzzleId: null,
   sessionToken: null,
   difficulty: null,
+  givens: null,
   flashingDigit: null,
   locked: false,
 
@@ -83,6 +99,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       puzzleId,
       sessionToken,
       difficulty,
+      givens,
       flashingDigit: null,
       locked: false,
     })
@@ -120,13 +137,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     })
 
     // Detect conflicts (client shows same-peer duplicates, server validates correctness)
-    const withConflicts = updated.map((c, i) => {
-      if (c.value === null || c.isGiven) return c
-      const hasConflict = updated.some(
-        (other, j) => j !== i && isPeer(i, j) && other.value === c.value,
-      )
-      return { ...c, isError: hasConflict }
-    })
+    const withConflicts = recomputeConflicts(updated)
     set({ cells: withConflicts })
 
     // Count new errors (only for the just-placed cell)
@@ -173,11 +184,10 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     const cell = cells[selected]
     if (cell.isGiven) return
 
-    set({
-      cells: cells.map((c, i) =>
-        i === selected ? { ...c, value: null, pencilMarks: [], isError: false } : c,
-      ),
-    })
+    const cleared = cells.map((c, i) =>
+      i === selected ? { ...c, value: null, pencilMarks: [], isError: false } : c,
+    )
+    set({ cells: recomputeConflicts(cleared) })
   },
 
   useHint: (index: number, digit: number) => {
@@ -198,10 +208,12 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       }
       return c
     })
-    set({ cells: updated, hintsUsed: hintsUsed + 1, selected: index })
+    // Recompute conflicts — placing a hint may resolve previous user errors
+    const withConflicts = recomputeConflicts(updated)
+    set({ cells: withConflicts, hintsUsed: hintsUsed + 1, selected: index })
 
-    const allFilled = updated.every((c) => c.value !== null)
-    const hasAnyConflict = updated.some((c) => c.isError)
+    const allFilled = withConflicts.every((c) => c.value !== null)
+    const hasAnyConflict = withConflicts.some((c) => c.isError)
     if (allFilled && !hasAnyConflict) get().setComplete()
   },
 
@@ -222,7 +234,25 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     puzzleId: null,
     sessionToken: null,
     difficulty: null,
+    givens: null,
     flashingDigit: null,
     locked: false,
   }),
-}))
+  }),
+  {
+    name: 'sudoku-game',
+    partialize: (state) => ({
+      cells: state.cells,
+      selected: state.selected,
+      pencilMode: state.pencilMode,
+      errors: state.errors,
+      hintsUsed: state.hintsUsed,
+      status: state.status,
+      puzzleId: state.puzzleId,
+      sessionToken: state.sessionToken,
+      difficulty: state.difficulty,
+      givens: state.givens,
+    }),
+  }
+  )
+)

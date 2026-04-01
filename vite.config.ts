@@ -10,9 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
+      strategies: 'generateSW',
       manifest: {
         name: 'Sudoku Online',
         short_name: 'Sudoku',
@@ -53,6 +51,30 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: /^\/api\/puzzle\/daily$/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'daily-puzzle', expiration: { maxAgeSeconds: 60 * 60 * 24 } },
+          },
+          {
+            urlPattern: /^\/api\/rankings\//,
+            handler: 'NetworkFirst',
+            options: { cacheName: 'rankings', networkTimeoutSeconds: 5, expiration: { maxEntries: 10, maxAgeSeconds: 60 * 5 } },
+          },
+          {
+            urlPattern: /^\/api\//,
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: { cacheName: 'images', expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 } },
+          },
+        ],
+      },
       devOptions: {
         enabled: true,
         type: 'module',
@@ -63,6 +85,9 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src'),
     },
+  },
+  build: {
+    reportCompressedSize: false,
   },
   server: {
     proxy: {

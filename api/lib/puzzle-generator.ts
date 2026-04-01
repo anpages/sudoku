@@ -11,6 +11,36 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
+/** Verify a 81-char string is a valid completed Sudoku (rows, cols, boxes all have 1-9). */
+function isValidSolution(sol: string): boolean {
+  if (sol.length !== 81) return false
+  for (let i = 0; i < 81; i++) {
+    const d = parseInt(sol[i], 10)
+    if (d < 1 || d > 9) return false
+  }
+  for (let r = 0; r < 9; r++) {
+    const row = new Set<string>()
+    const col = new Set<string>()
+    for (let c = 0; c < 9; c++) {
+      row.add(sol[r * 9 + c])
+      col.add(sol[c * 9 + r])
+    }
+    if (row.size !== 9 || col.size !== 9) return false
+  }
+  for (let br = 0; br < 3; br++) {
+    for (let bc = 0; bc < 3; bc++) {
+      const box = new Set<string>()
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          box.add(sol[(br * 3 + r) * 9 + (bc * 3 + c)])
+        }
+      }
+      if (box.size !== 9) return false
+    }
+  }
+  return true
+}
+
 /**
  * Fill an empty 9×9 board with a valid solved Sudoku using backtracking.
  * Returns the 81-char solution string.
@@ -27,11 +57,18 @@ function fillBoard(): string {
     const boxCol = Math.floor(col / 3) * 3
 
     const used = new Set<number>()
-    for (let c = 0; c < 9; c++) used.add(board[row * 9 + c] ?? 0)
-    for (let r = 0; r < 9; r++) used.add(board[r * 9 + col] ?? 0)
+    for (let c = 0; c < 9; c++) {
+      const v = board[row * 9 + c]
+      if (v !== null) used.add(v)
+    }
+    for (let r = 0; r < 9; r++) {
+      const v = board[r * 9 + col]
+      if (v !== null) used.add(v)
+    }
     for (let br = 0; br < 3; br++) {
       for (let bc = 0; bc < 3; bc++) {
-        used.add(board[(boxRow + br) * 9 + (boxCol + bc)] ?? 0)
+        const v = board[(boxRow + br) * 9 + (boxCol + bc)]
+        if (v !== null) used.add(v)
       }
     }
 
@@ -49,15 +86,10 @@ function fillBoard(): string {
 }
 
 /**
- * Generate a Sudoku puzzle with a unique solution at the given difficulty.
- * Returns { givens, solution } — solution is never sent to the client.
+ * Dig holes from a solved board, maintaining unique solvability.
+ * Uses multiple shuffled passes to maximise the number of holes.
  */
-export function generatePuzzle(difficulty: Difficulty): { givens: string; solution: string } {
-  const solution = fillBoard()
-  const config = DIFFICULTY_CONFIG[difficulty]
-  const [minHoles, maxHoles] = config.holes
-  const targetHoles = minHoles + Math.floor(Math.random() * (maxHoles - minHoles + 1))
-
+function digHoles(solution: string, targetHoles: number): string {
   const board = solution.split('').map(Number)
   const indices = shuffle(Array.from({ length: 81 }, (_, i) => i))
 
@@ -68,16 +100,61 @@ export function generatePuzzle(difficulty: Difficulty): { givens: string; soluti
     const original = board[idx]
     board[idx] = 0
 
-    const givensStr = board.map(String).join('')
-    if (hasUniqueSolution(givensStr)) {
+    if (hasUniqueSolution(board.map(String).join(''))) {
       holesRemoved++
     } else {
-      board[idx] = original // restore — would create multiple solutions
+      board[idx] = original
     }
   }
 
-  return {
-    givens: board.map(String).join(''),
-    solution,
+  // If we didn't reach the target (can happen at high difficulty),
+  // do a second pass with a fresh shuffle of the remaining filled cells.
+  if (holesRemoved < targetHoles) {
+    const remaining = shuffle(
+      Array.from({ length: 81 }, (_, i) => i).filter((i) => board[i] !== 0),
+    )
+    for (const idx of remaining) {
+      if (holesRemoved >= targetHoles) break
+
+      const original = board[idx]
+      board[idx] = 0
+
+      if (hasUniqueSolution(board.map(String).join(''))) {
+        holesRemoved++
+      } else {
+        board[idx] = original
+      }
+    }
   }
+
+  return board.map(String).join('')
+}
+
+/**
+ * Generate a Sudoku puzzle with a unique solution at the given difficulty.
+ * Returns { givens, solution } — solution is never sent to the client.
+ */
+export function generatePuzzle(difficulty: Difficulty): { givens: string; solution: string } {
+  const config = DIFFICULTY_CONFIG[difficulty]
+  const [minHoles, maxHoles] = config.holes
+  const targetHoles = minHoles + Math.floor(Math.random() * (maxHoles - minHoles + 1))
+
+  // Retry up to 3 times to produce a valid puzzle
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const solution = fillBoard()
+
+    if (!isValidSolution(solution)) continue
+
+    const givens = digHoles(solution, targetHoles)
+
+    // Final safety check: the puzzle must have a unique solution
+    if (hasUniqueSolution(givens)) {
+      return { givens, solution }
+    }
+  }
+
+  // Fallback: generate a simple puzzle with fewer holes
+  const solution = fillBoard()
+  const givens = digHoles(solution, minHoles)
+  return { givens, solution }
 }

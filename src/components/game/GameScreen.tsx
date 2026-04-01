@@ -41,11 +41,29 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
   useKeyboard(null)
 
   useEffect(() => {
-    initGame({ givens, puzzleId, sessionToken, difficulty })
-    startTimer(sessionToken)
+    const saved = useGameStore.getState()
+    const isRestoring =
+      saved.puzzleId === puzzleId &&
+      (saved.status === 'playing' || saved.status === 'paused')
+
+    if (isRestoring) {
+      // Resume from saved state — timer picks up from persisted elapsed
+      startTimer(sessionToken, useTimerStore.getState().elapsed)
+    } else {
+      initGame({ givens, puzzleId, sessionToken, difficulty })
+      startTimer(sessionToken)
+    }
+
     return () => {
-      resetGame()
-      resetTimer()
+      // Only reset if the game finished; preserve state for in-progress games
+      const status = useGameStore.getState().status
+      if (status !== 'playing' && status !== 'paused') {
+        resetGame()
+        resetTimer()
+      } else {
+        // Pause the timer so it doesn't keep ticking while unmounted
+        useTimerStore.getState().pause()
+      }
     }
   }, [puzzleId]) // eslint-disable-line react-hooks/exhaustive-deps
 

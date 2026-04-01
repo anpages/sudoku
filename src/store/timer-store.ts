@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { SYNC_INTERVAL_MS } from '@/shared/constants'
 
 interface TimerStore {
@@ -33,7 +34,9 @@ async function syncElapsed(sessionToken: string, elapsed: number) {
   }
 }
 
-export const useTimerStore = create<TimerStore>()((set, get) => {
+export const useTimerStore = create<TimerStore>()(
+  persist(
+  (set, get) => {
   function startIntervals(sessionToken: string) {
     clearIntervals()
     intervalId = setInterval(() => get().tick(), 1000)
@@ -86,4 +89,13 @@ export const useTimerStore = create<TimerStore>()((set, get) => {
 
     tick: () => set((s) => ({ elapsed: s.elapsed + 1 })),
   }
-})
+  },
+  {
+    name: 'sudoku-timer',
+    partialize: (state) => ({
+      elapsed: state.elapsed,
+      sessionToken: state.sessionToken,
+    }),
+  }
+  )
+)
