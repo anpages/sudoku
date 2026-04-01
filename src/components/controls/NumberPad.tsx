@@ -16,7 +16,7 @@ function DigitButton({ digit, disabled }: { digit: number; disabled: boolean }) 
       className={[
         'relative flex flex-col items-center justify-center',
         'rounded-xl transition-all duration-100',
-        'py-3 lg:py-5',
+        'py-4 lg:py-5',
         complete
           ? 'opacity-15 cursor-not-allowed bg-(--color-surface-alt) text-(--color-text)'
           : disabled
@@ -24,7 +24,7 @@ function DigitButton({ digit, disabled }: { digit: number; disabled: boolean }) 
             : 'bg-(--color-surface-alt) hover:bg-(--color-cell-selected) active:bg-(--color-cell-selected) cursor-pointer text-(--color-primary)',
       ].join(' ')}
     >
-      <span className="text-xl lg:text-3xl font-semibold leading-none">{digit}</span>
+      <span className="text-2xl lg:text-3xl font-semibold leading-none">{digit}</span>
     </motion.button>
   )
 }
@@ -40,13 +40,13 @@ function EraseButton({ disabled }: { disabled: boolean }) {
       className={[
         'relative flex flex-col items-center justify-center',
         'rounded-xl transition-all duration-100',
-        'py-3',
+        'py-4',
         disabled
           ? 'opacity-30 cursor-not-allowed bg-(--color-surface-alt) text-(--color-text-muted)'
           : 'bg-(--color-surface-alt) hover:bg-(--color-cell-selected) active:bg-(--color-cell-selected) cursor-pointer text-(--color-text-muted)',
       ].join(' ')}
     >
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
         <path d="M20 5H9l-7 7 7 7h11a2 2 0 002-2V7a2 2 0 00-2-2z" />
         <line x1="18" y1="9" x2="12" y2="15" />
         <line x1="12" y1="9" x2="18" y2="15" />

@@ -153,35 +153,46 @@ export function Home() {
             <svg className="w-4 h-4 text-(--color-text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M9 18l6-6-6-6" /></svg>
           </motion.button>
 
-          {/* Choose difficulty — compact inline */}
-          <motion.div variants={fadeUp} className="w-full flex items-center gap-2 px-1">
-            <div className="flex-1 flex gap-1 overflow-x-auto">
-              {DIFFICULTY_KEYS.map((key) => {
-                const cfg = DIFFICULTY_CONFIG[key]
-                const active = selectedDiff === key
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setSelectedDiff(key)}
-                    className={[
-                      'px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200',
-                      active
-                        ? 'text-white'
-                        : 'text-(--color-text-muted) hover:text-(--color-text)',
-                    ].join(' ')}
-                    style={active ? { backgroundColor: cfg.color } : undefined}
-                  >
-                    {cfg.label}
-                  </button>
-                )
-              })}
+          {/* Choose difficulty — dots + label + play */}
+          <motion.div variants={fadeUp} className="w-full flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1.5">
+                {DIFFICULTY_KEYS.map((key) => {
+                  const cfg = DIFFICULTY_CONFIG[key]
+                  const active = selectedDiff === key
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setSelectedDiff(key)}
+                      className="p-0.5"
+                      title={cfg.label}
+                    >
+                      <div
+                        className="rounded-full transition-all duration-200"
+                        style={{
+                          backgroundColor: cfg.color,
+                          width: active ? 12 : 8,
+                          height: active ? 12 : 8,
+                          opacity: active ? 1 : 0.35,
+                        }}
+                      />
+                    </button>
+                  )
+                })}
+              </div>
+              <span
+                className="text-sm font-semibold transition-colors duration-200"
+                style={{ color: DIFFICULTY_CONFIG[selectedDiff].color }}
+              >
+                {DIFFICULTY_CONFIG[selectedDiff].label}
+              </span>
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handlePlay}
-              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-(--color-primary) hover:bg-(--color-surface-alt) transition-colors"
+              className="px-5 py-2 rounded-xl text-sm font-semibold text-(--color-primary) bg-(--color-surface-alt) hover:bg-(--color-surface-raised) transition-colors"
             >
-              Jugar →
+              Jugar
             </motion.button>
           </motion.div>
 
