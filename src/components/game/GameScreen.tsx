@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { SudokuBoard } from '@/components/board/SudokuBoard'
 import { NumberPad } from '@/components/controls/NumberPad'
@@ -36,7 +36,8 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
   const resetTimer = useTimerStore((s) => s.reset)
 
   const [completionResult, setCompletionResult] = useState<CompletionResult | null>(null)
-  const [syncing, setSyncing] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const submittingRef = useRef(false)
 
   useKeyboard(null)
 
@@ -47,7 +48,6 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
       (saved.status === 'playing' || saved.status === 'paused')
 
     if (isRestoring) {
-      // Resume from saved state — timer picks up from persisted elapsed
       startTimer(sessionToken, useTimerStore.getState().elapsed)
     } else {
       initGame({ givens, puzzleId, sessionToken, difficulty })
@@ -55,13 +55,11 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     }
 
     return () => {
-      // Only reset if the game finished; preserve state for in-progress games
       const status = useGameStore.getState().status
       if (status !== 'playing' && status !== 'paused') {
         resetGame()
         resetTimer()
       } else {
-        // Pause the timer so it doesn't keep ticking while unmounted
         useTimerStore.getState().pause()
       }
     }
@@ -72,11 +70,16 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     if (status === 'complete' || status === 'failed') pauseTimer()
   }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Submit completion to server — modal only shows AFTER this finishes
   useEffect(() => {
-    if (status !== 'complete') return
+    if (status !== 'complete') {
+      setSubmitted(false)
+      return
+    }
+    if (submittingRef.current) return
+    submittingRef.current = true
 
     async function submit() {
-      setSyncing(true)
       const board = cells.map((c) => c.value ?? 0).join('')
       try {
         const result = await api.post<CompletionResult>('/api/puzzle/validate', {
@@ -90,7 +93,8 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
       } catch (e) {
         console.error('[sudoku] Error al guardar partida:', e)
       } finally {
-        setSyncing(false)
+        submittingRef.current = false
+        setSubmitted(true)
       }
     }
     submit()
@@ -113,13 +117,13 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     resetGame()
     resetTimer()
     setCompletionResult(null)
+    setSubmitted(false)
     initGame({ givens, puzzleId, sessionToken, difficulty })
     startTimer(sessionToken)
   }
 
   const config = DIFFICULTY_CONFIG[difficulty]
 
-  // Shared board-column max-w classes (info row + board share the same constraint)
   const boardMaxW = 'max-w-[min(90vw,calc(90vh-280px),480px)] lg:max-w-[min(calc(100vh-200px),560px)]'
 
   return (
@@ -155,7 +159,17 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         <NumberPad />
       </div>
 
-      {status === 'complete' && !syncing && (
+      {/* Saving spinner while submitting completion */}
+      {status === 'complete' && !submitted && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
+          <div className="flex flex-col items-center gap-3 bg-(--color-surface) rounded-2xl px-8 py-6 shadow-xl">
+            <div className="w-8 h-8 border-4 border-(--color-primary) border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-(--color-text-muted)">Guardando partida...</p>
+          </div>
+        </div>
+      )}
+
+      {status === 'complete' && submitted && (
         <CompletionModal
           difficulty={difficulty}
           elapsedSeconds={elapsed}
