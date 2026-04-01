@@ -8,17 +8,10 @@ interface Props {
 
 export function SudokuBoard({ onRestart }: Props) {
   const status = useGameStore((s) => s.status)
-  const flashingDigit = useGameStore((s) => s.flashingDigit)
+  const flashingIndex = useGameStore((s) => s.flashingIndex)
   const cells = useGameStore((s) => s.cells)
 
   if (cells.length === 0) return null
-
-  const flashingIndices = flashingDigit
-    ? cells.reduce<number[]>((acc, c, i) => {
-        if (c.value === flashingDigit) acc.push(i)
-        return acc
-      }, [])
-    : []
 
   return (
     <div className="relative w-full aspect-square">
@@ -31,7 +24,7 @@ export function SudokuBoard({ onRestart }: Props) {
           <SudokuCell
             key={i}
             index={i}
-            isFlashing={flashingIndices.includes(i)}
+            isFlashing={flashingIndex === i}
           />
         ))}
       </div>

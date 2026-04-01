@@ -16,7 +16,7 @@ interface GameStore {
   sessionToken: string | null
   difficulty: Difficulty | null
   givens: string | null
-  flashingDigit: number | null  // 1-9, null = not flashing
+  flashingIndex: number | null  // 0-80, null = not flashing
   locked: boolean               // true during flash or when paused
 
   // Actions
@@ -85,7 +85,7 @@ export const useGameStore = create<GameStore>()(
   sessionToken: null,
   difficulty: null,
   givens: null,
-  flashingDigit: null,
+  flashingIndex: null,
   locked: false,
 
   initGame: ({ givens, puzzleId, sessionToken, difficulty }) => {
@@ -100,7 +100,7 @@ export const useGameStore = create<GameStore>()(
       sessionToken,
       difficulty,
       givens,
-      flashingDigit: null,
+      flashingIndex: null,
       locked: false,
     })
   },
@@ -153,8 +153,8 @@ export const useGameStore = create<GameStore>()(
     // Check if this digit is now fully placed (all 9 instances)
     const count = withConflicts.filter((c) => c.value === digit).length
     if (count === 9) {
-      set({ flashingDigit: digit, locked: true })
-      setTimeout(() => set({ flashingDigit: null, locked: false }), FLASH_DURATION_MS)
+      set({ flashingIndex: selected, locked: true })
+      setTimeout(() => set({ flashingIndex: null, locked: false }), FLASH_DURATION_MS)
     }
 
     // Check completion: all filled AND no conflicts anywhere on the board
@@ -235,7 +235,7 @@ export const useGameStore = create<GameStore>()(
     sessionToken: null,
     difficulty: null,
     givens: null,
-    flashingDigit: null,
+    flashingIndex: null,
     locked: false,
   }),
   }),

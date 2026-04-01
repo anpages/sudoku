@@ -72,6 +72,7 @@ export interface UserProfile {
   avatarUrl: string | null
   createdAt: string
   gamesPlayed: number
+  gamesAbandoned: number
   bestTimesByDifficulty: Partial<Record<Difficulty, number>>
   dailyStreak: number
 }

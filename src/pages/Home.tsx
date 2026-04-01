@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { DIFFICULTY_CONFIG } from '@/shared/constants'
 import type { Difficulty } from '@/shared/types'
+import { useGameStore } from '@/store/game-store'
 import { Header } from '@/components/layout/Header'
 
 const DIFFICULTY_KEYS = Object.keys(DIFFICULTY_CONFIG) as Difficulty[]
@@ -69,6 +70,9 @@ const itemVariant = {
 
 export function Home() {
   const navigate = useNavigate()
+  const savedStatus = useGameStore((s) => s.status)
+  const savedDifficulty = useGameStore((s) => s.difficulty)
+  const hasSavedGame = (savedStatus === 'playing' || savedStatus === 'paused') && savedDifficulty
 
   function handleRandom() {
     const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
@@ -89,10 +93,28 @@ export function Home() {
         <p className="text-(--color-text-muted) mt-2">El clásico juego de lógica. Sin distracciones.</p>
       </div>
 
+      {hasSavedGame && (
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => navigate(`/juego/${savedDifficulty}`, { state: { resume: true } })}
+          className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-(--color-primary) text-white text-base font-bold shadow-lg hover:opacity-90 transition-opacity"
+        >
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
+          </svg>
+          Continuar partida
+        </motion.button>
+      )}
+
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={handleRandom}
-        className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-(--color-primary) text-white text-base font-bold shadow-lg hover:opacity-90 transition-opacity"
+        className={[
+          'flex items-center justify-center gap-2.5 py-4 rounded-2xl text-base font-bold transition-opacity hover:opacity-90',
+          hasSavedGame
+            ? 'border border-(--color-border) bg-(--color-surface) text-(--color-text)'
+            : 'bg-(--color-primary) text-white shadow-lg',
+        ].join(' ')}
       >
         <DiceIcon />
         Partida rápida

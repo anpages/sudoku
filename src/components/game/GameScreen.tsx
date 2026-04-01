@@ -87,8 +87,8 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
           errorsMade: errors,
         })
         setCompletionResult(result)
-      } catch {
-        // El modal se muestra igualmente con datos locales
+      } catch (e) {
+        console.error('[sudoku] Error al guardar partida:', e)
       } finally {
         setSyncing(false)
       }

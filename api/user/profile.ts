@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth, errorResponse } from '../lib/middleware.js'
 import { db } from '../lib/db.js'
-import { completions } from '../../drizzle/schema.js'
-import { eq, asc } from 'drizzle-orm'
+import { completions, puzzleSessions } from '../../drizzle/schema.js'
+import { eq, and, asc, sql } from 'drizzle-orm'
 import type { Difficulty } from '../../src/shared/types.js'
 import { DIFFICULTY_CONFIG } from '../../src/shared/constants.js'
 
@@ -49,6 +49,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const gamesPlayed = userCompletions.length
 
+  // Count abandoned sessions (started a new game while one was in progress)
+  const [abandonedCount] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(puzzleSessions)
+    .where(
+      and(
+        eq(puzzleSessions.userId, userId),
+        eq(puzzleSessions.status, 'abandoned'),
+      ),
+    )
+
+  const gamesAbandoned = abandonedCount?.count ?? 0
+
   // Best time per difficulty
   const bestTimesByDifficulty: Partial<Record<Difficulty, number>> = {}
   for (const diff of Object.keys(DIFFICULTY_CONFIG) as Difficulty[]) {
@@ -72,6 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     avatarUrl: session.user.image ?? null,
     createdAt: session.user.createdAt,
     gamesPlayed,
+    gamesAbandoned,
     bestTimesByDifficulty,
     dailyStreak,
   })

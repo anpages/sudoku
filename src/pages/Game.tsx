@@ -1,21 +1,24 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { GameScreen } from '@/components/game/GameScreen'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Header } from '@/components/layout/Header'
 import { api } from '@/lib/api'
 import { useGameStore } from '@/store/game-store'
+import { useTimerStore } from '@/store/timer-store'
 import type { Difficulty, PuzzleSession } from '@/shared/types'
 import { DIFFICULTY_CONFIG } from '@/shared/constants'
 
 export function Game() {
   const { difficulty } = useParams<{ difficulty: Difficulty }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const [session, setSession] = useState<PuzzleSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const diff = difficulty as Difficulty
+  const wantsResume = !!(location.state as { resume?: boolean } | null)?.resume
 
   useEffect(() => {
     if (!diff || !DIFFICULTY_CONFIG[diff]) {
@@ -23,23 +26,29 @@ export function Game() {
       return
     }
 
-    // Restore saved game if same difficulty and still in progress
-    const saved = useGameStore.getState()
-    if (
-      (saved.status === 'playing' || saved.status === 'paused') &&
-      saved.difficulty === diff &&
-      saved.puzzleId && saved.sessionToken && saved.givens
-    ) {
-      setSession({
-        givens: saved.givens,
-        puzzleId: saved.puzzleId,
-        sessionToken: saved.sessionToken,
-        difficulty: saved.difficulty!,
-        startedAt: Date.now(),
-      })
-      setLoading(false)
-      return
+    // Only restore saved game if explicitly requested via "Continuar partida"
+    if (wantsResume) {
+      const saved = useGameStore.getState()
+      if (
+        (saved.status === 'playing' || saved.status === 'paused') &&
+        saved.difficulty === diff &&
+        saved.puzzleId && saved.sessionToken && saved.givens
+      ) {
+        setSession({
+          givens: saved.givens,
+          puzzleId: saved.puzzleId,
+          sessionToken: saved.sessionToken,
+          difficulty: saved.difficulty!,
+          startedAt: Date.now(),
+        })
+        setLoading(false)
+        return
+      }
     }
+
+    // Starting a new game — clear any saved state
+    useGameStore.getState().reset()
+    useTimerStore.getState().reset()
 
     async function loadPuzzle() {
       setLoading(true)
@@ -54,7 +63,7 @@ export function Game() {
       }
     }
     loadPuzzle()
-  }, [diff, navigate])
+  }, [diff, navigate, wantsResume])
 
   if (loading) {
     return (

@@ -46,8 +46,10 @@ export function Profile() {
           <>
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3 mb-8">
-              <StatCard label="Partidas jugadas" value={profile.gamesPlayed.toString()} icon="🎮" />
+              <StatCard label="Completadas" value={profile.gamesPlayed.toString()} icon="🎮" />
+              <StatCard label="Abandonadas" value={profile.gamesAbandoned.toString()} icon="💀" />
               <StatCard label="Racha diaria" value={`${profile.dailyStreak} días`} icon="🔥" />
+              <StatCard label="Ratio" value={profile.gamesPlayed > 0 ? `${Math.round((profile.gamesPlayed / (profile.gamesPlayed + profile.gamesAbandoned)) * 100)}%` : '—'} icon="📊" />
             </div>
 
             {/* Best times */}

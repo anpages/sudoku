@@ -4,6 +4,7 @@ import { generatePuzzle } from '../lib/puzzle-generator.js'
 import { signSessionToken } from '../lib/anti-cheat.js'
 import { db } from '../lib/db.js'
 import { puzzles, puzzleSessions } from '../../drizzle/schema.js'
+import { and, eq } from 'drizzle-orm'
 import type { Difficulty } from '../../src/shared/types.js'
 import { DIFFICULTY_CONFIG } from '../../src/shared/constants.js'
 
@@ -39,6 +40,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!checkRateLimit(session.user.id)) {
     return errorResponse(res, 'Demasiadas solicitudes. Espera un momento.', 429)
   }
+
+  // Abandon all previous active sessions for this user
+  await db
+    .update(puzzleSessions)
+    .set({ status: 'abandoned' })
+    .where(
+      and(
+        eq(puzzleSessions.userId, session.user.id),
+        eq(puzzleSessions.status, 'active'),
+      ),
+    )
 
   // Generate puzzle server-side
   const { givens, solution } = generatePuzzle(difficulty as Difficulty)
