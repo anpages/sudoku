@@ -56,7 +56,7 @@ export function SudokuCell({ index, isFlashing }: Props) {
       {cell.value !== null ? (
         <span
           className={[
-            'text-[clamp(15px,3.6vmin,26px)] leading-none font-medium',
+            'text-[clamp(18px,4.5vmin,32px)] leading-none font-medium',
             textClass,
           ].join(' ')}
         >

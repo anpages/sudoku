@@ -55,15 +55,15 @@ export function Home() {
     : `Continuar · ${DIFFICULTY_CONFIG[savedDifficulty!]?.label ?? ''}`
 
   return (
-    <div className="flex flex-col min-h-screen bg-(--color-surface)">
+    <div className="flex flex-col h-screen overflow-hidden bg-(--color-surface)">
       <Header />
 
-      <main className="flex-1 flex items-center justify-center px-4 py-8 lg:py-0">
+      <main className="flex-1 flex items-center justify-center px-4">
         <motion.div
           variants={stagger}
           initial="hidden"
           animate="show"
-          className="w-full max-w-sm flex flex-col items-center gap-8"
+          className="w-full max-w-sm flex flex-col items-center gap-5"
         >
           {/* Hero */}
           <motion.div variants={fadeUp} className="text-center">
@@ -143,7 +143,7 @@ export function Home() {
           <motion.div variants={fadeUp} className="w-full grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate('/diario')}
-              className="flex flex-col items-center gap-2 py-5 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
+              className="flex flex-col items-center gap-2 py-4 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
             >
               <div className="w-10 h-10 rounded-xl bg-(--color-surface-alt) group-hover:bg-(--color-surface-raised) flex items-center justify-center transition-colors">
                 <svg className="w-5 h-5 text-(--color-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
@@ -161,7 +161,7 @@ export function Home() {
 
             <button
               onClick={() => navigate('/ranking')}
-              className="flex flex-col items-center gap-2 py-5 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
+              className="flex flex-col items-center gap-2 py-4 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
             >
               <div className="w-10 h-10 rounded-xl bg-(--color-surface-alt) group-hover:bg-(--color-surface-raised) flex items-center justify-center transition-colors">
                 <svg className="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
