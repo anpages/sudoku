@@ -261,6 +261,15 @@ export const useGameStore = create<GameStore>()(
     const elapsed = useTimerStore.getState().elapsed
     const board = cells.map((c) => c.value ?? 0).join('')
 
+    console.log('[sudoku] saving completion…', {
+      hasToken: !!sessionToken,
+      boardLength: board.length,
+      boardPreview: board.slice(0, 20) + '…',
+      elapsed,
+      hintsUsed,
+      errors,
+    })
+
     fetch('/api/puzzle/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -272,7 +281,16 @@ export const useGameStore = create<GameStore>()(
         hintsUsed,
         errorsMade: errors,
       }),
-    }).catch((e) => console.error('[sudoku] save error:', e))
+    })
+      .then(async (r) => {
+        const body = await r.json().catch(() => ({}))
+        if (r.ok) {
+          console.log('[sudoku] save OK:', body)
+        } else {
+          console.error('[sudoku] save FAILED:', r.status, body)
+        }
+      })
+      .catch((e) => console.error('[sudoku] save network error:', e))
   },
   setFailed: () => set({ status: 'failed', locked: true }),
 
