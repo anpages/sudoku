@@ -2,7 +2,11 @@ import { useGameStore } from '@/store/game-store'
 import { SudokuCell } from './SudokuCell'
 import { BoardOverlay } from './BoardOverlay'
 
-export function SudokuBoard() {
+interface Props {
+  onRestart?: () => void
+}
+
+export function SudokuBoard({ onRestart }: Props) {
   const status = useGameStore((s) => s.status)
   const flashingDigit = useGameStore((s) => s.flashingDigit)
   const cells = useGameStore((s) => s.cells)
@@ -33,7 +37,7 @@ export function SudokuBoard() {
       </div>
 
       {(status === 'paused' || status === 'failed') && (
-        <BoardOverlay status={status} />
+        <BoardOverlay status={status} onRestart={onRestart} />
       )}
     </div>
   )

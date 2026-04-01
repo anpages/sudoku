@@ -49,11 +49,13 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     }
   }, [puzzleId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Parar el cronómetro al terminar o fallar
+  useEffect(() => {
+    if (status === 'complete' || status === 'failed') pauseTimer()
+  }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (status !== 'complete') return
-
-    // Parar el cronómetro inmediatamente
-    pauseTimer()
 
     async function submit() {
       setSyncing(true)
@@ -83,10 +85,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         sessionToken,
         currentBoard,
       })
-      const partial = cells.map((c, i) =>
-        i === res.index ? res.digit : (c.value ?? 0),
-      ).join('')
-      useHint(partial)
+      useHint(res.index, res.digit)
     } catch {
       // ignore
     }
@@ -123,7 +122,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         </div>
 
         {/* Board fills the column width */}
-        <SudokuBoard />
+        <SudokuBoard onRestart={handleRestart} />
 
         {/* Mobile-only controls below board */}
         <div className="lg:hidden flex flex-col items-center gap-4 w-full mt-1">

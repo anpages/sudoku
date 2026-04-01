@@ -76,7 +76,7 @@ export function SudokuCell({ index, isFlashing }: Props) {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
                 <span
                   key={n}
-                  className="flex items-center justify-center text-[clamp(6px,1vmin,9px)] text-(--color-text-pencil) leading-none"
+                  className="flex items-center justify-center text-[clamp(9px,2vmin,12px)] text-(--color-text-pencil) font-medium leading-none"
                 >
                   {cell.pencilMarks.includes(n) ? n : ''}
                 </span>

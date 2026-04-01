@@ -28,7 +28,7 @@ interface GameStore {
   enterValue: (digit: number) => void
   togglePencilMark: (digit: number) => void
   eraseCell: () => void
-  useHint: (solution: string) => void
+  useHint: (index: number, digit: number) => void
   setPaused: (paused: boolean) => void
   setComplete: () => void
   setFailed: () => void
@@ -180,22 +180,29 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     })
   },
 
-  useHint: (solution: string) => {
-    const { cells, selected, status, locked, hintsUsed } = get()
-    if (status !== 'playing' || locked || selected === null) return
-    const cell = cells[selected]
-    if (cell.isGiven || cell.value !== null) return
+  useHint: (index: number, digit: number) => {
+    const { cells, status, locked, hintsUsed } = get()
+    if (status !== 'playing' || locked) return
+    const cell = cells[index]
+    if (!cell || cell.isGiven || cell.value !== null) return
 
-    const correctDigit = parseInt(solution[selected], 10)
-    const next = cells.map((c, i) =>
-      i === selected
-        ? { ...c, value: correctDigit, isGiven: true, pencilMarks: [], isError: false }
-        : c,
+    // Colocar el dígito como si fuera una celda dada (marcada en azul, inmodificable)
+    let updated = cells.map((c, i) =>
+      i === index ? { ...c, value: digit, isGiven: true, pencilMarks: [], isError: false } : c,
     )
-    set({ cells: next, hintsUsed: hintsUsed + 1 })
+    // Limpiar marcas de lápiz en celdas vecinas
+    updated = updated.map((c, i) => {
+      if (i === index || !isPeer(i, index)) return c
+      if (c.pencilMarks.includes(digit)) {
+        return { ...c, pencilMarks: c.pencilMarks.filter((m) => m !== digit) }
+      }
+      return c
+    })
+    set({ cells: updated, hintsUsed: hintsUsed + 1, selected: index })
 
-    const allFilled = next.every((c) => c.value !== null)
-    if (allFilled) get().setComplete()
+    const allFilled = updated.every((c) => c.value !== null)
+    const hasAnyConflict = updated.some((c) => c.isError)
+    if (allFilled && !hasAnyConflict) get().setComplete()
   },
 
   setPaused: (paused) => {

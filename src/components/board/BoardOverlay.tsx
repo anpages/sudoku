@@ -5,9 +5,10 @@ import type { GameStatus } from '@/store/game-store'
 
 interface Props {
   status: GameStatus
+  onRestart?: () => void
 }
 
-export function BoardOverlay({ status }: Props) {
+export function BoardOverlay({ status, onRestart }: Props) {
   const resume = useTimerStore((s) => s.resume)
   const setPaused = useGameStore((s) => s.setPaused)
 
@@ -24,20 +25,26 @@ export function BoardOverlay({ status }: Props) {
     >
       {status === 'paused' ? (
         <>
-          <div className="text-4xl mb-4">⏸</div>
-          <p className="text-(--color-text) font-semibold text-lg mb-6">Juego en pausa</p>
+          <p className="text-(--color-text) font-semibold text-lg mb-5">Juego en pausa</p>
           <button
             onClick={handleResume}
-            className="px-6 py-3 bg-(--color-primary) text-white rounded-lg font-semibold text-sm hover:bg-(--color-primary-dark) transition-colors"
+            className="px-6 py-3 bg-(--color-primary) text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
           >
             Continuar
           </button>
         </>
       ) : (
         <>
-          <div className="text-4xl mb-4">💀</div>
-          <p className="text-(--color-text) font-semibold text-lg mb-2">¡3 errores!</p>
-          <p className="text-(--color-text-muted) text-sm">Debes empezar de nuevo</p>
+          <p className="text-(--color-text) font-bold text-xl mb-1">¡3 errores!</p>
+          <p className="text-(--color-text-muted) text-sm mb-6">Inténtalo de nuevo</p>
+          {onRestart && (
+            <button
+              onClick={onRestart}
+              className="px-6 py-3 bg-(--color-primary) text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
+            >
+              Reiniciar
+            </button>
+          )}
         </>
       )}
     </motion.div>
