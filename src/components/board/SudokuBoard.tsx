@@ -18,7 +18,7 @@ export function SudokuBoard({ onRestart }: Props) {
   return (
     <div className="relative w-full aspect-square">
       <div
-        className="grid grid-cols-9 w-full h-full border-2 border-(--color-border-strong) rounded-sm overflow-hidden shadow-lg"
+        className="grid grid-cols-9 w-full h-full border-[2.5px] border-(--color-border-strong) rounded-md overflow-hidden"
         role="grid"
         aria-label="Tablero de sudoku"
       >

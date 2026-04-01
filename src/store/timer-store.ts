@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { SYNC_INTERVAL_MS } from '@/shared/constants'
+import { useGameStore } from '@/store/game-store'
 
 interface TimerStore {
   elapsed: number         // seconds
@@ -45,7 +46,7 @@ export const useTimerStore = create<TimerStore>()(
     }, SYNC_INTERVAL_MS)
   }
 
-  // Page Visibility API — pause when hidden
+  // Page Visibility API — pause when hidden, resume only if game is playing
   if (typeof document !== 'undefined') {
     document.addEventListener('visibilitychange', () => {
       const { running, sessionToken: token } = get()
@@ -53,8 +54,12 @@ export const useTimerStore = create<TimerStore>()(
         clearIntervals()
         set({ running: false })
       } else if (!document.hidden && !running && token) {
-        set({ running: true })
-        startIntervals(token)
+        // Only resume if the game is actively playing (not user-paused/complete/failed)
+        const gameStatus = useGameStore.getState().status
+        if (gameStatus === 'playing') {
+          set({ running: true })
+          startIntervals(token)
+        }
       }
     })
   }

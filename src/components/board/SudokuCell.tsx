@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useGameStore } from '@/store/game-store'
 import { getCellHighlight } from '@/engine/highlighter'
 
@@ -20,45 +20,43 @@ export function SudokuCell({ index, isFlashing }: Props) {
   const row = Math.floor(index / 9)
   const col = index % 9
 
-  // Thick borders for 3x3 boxes
-  const borderRight = col === 2 || col === 5 ? 'border-r-2' : 'border-r'
-  const borderBottom = row === 2 || row === 5 ? 'border-b-2' : 'border-b'
-  const borderTop = row === 0 ? 'border-t-2' : row === 3 || row === 6 ? 'border-t-2' : 'border-t'
-  const borderLeft = col === 0 ? 'border-l-2' : col === 3 || col === 6 ? 'border-l-2' : 'border-l'
+  // Box borders: thicker at 3×3 boundaries
+  const borderClasses = [
+    col % 3 === 0 && col !== 0 ? 'border-l-[2px]' : 'border-l-[0.5px]',
+    row % 3 === 0 && row !== 0 ? 'border-t-[2px]' : 'border-t-[0.5px]',
+  ].join(' ')
 
   let bgClass = 'bg-(--color-surface)'
-  if (isFlashing) bgClass = 'bg-amber-200 dark:bg-amber-400/30'
+  if (isFlashing) bgClass = 'bg-amber-100 dark:bg-amber-500/20'
   else if (highlight === 'error') bgClass = 'bg-(--color-cell-error-bg)'
   else if (highlight === 'selected') bgClass = 'bg-(--color-cell-selected)'
   else if (highlight === 'same-number') bgClass = 'bg-(--color-cell-same-number)'
   else if (highlight === 'highlight') bgClass = 'bg-(--color-cell-highlight)'
-  else if (cell.isGiven) bgClass = 'bg-(--color-cell-given)'
 
   const textClass = cell.isGiven
-    ? 'text-(--color-text-given) font-bold'
+    ? 'text-(--color-text-given)'
     : highlight === 'error'
-      ? 'text-(--color-text-error) font-semibold'
-      : 'text-(--color-text-input) font-semibold'
+      ? 'text-(--color-text-error)'
+      : 'text-(--color-text-input)'
 
   return (
     <motion.div
       className={[
         'relative flex items-center justify-center cursor-pointer select-none',
         'border-(--color-border)',
-        borderRight, borderBottom, borderTop, borderLeft,
+        borderClasses,
         bgClass,
-        'transition-colors duration-100',
+        'transition-colors duration-75',
         'aspect-square',
       ].join(' ')}
       onClick={() => selectCell(index)}
-      whileTap={!cell.isGiven ? { scale: 0.92 } : undefined}
-      animate={isFlashing ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-      transition={{ duration: 0.8 }}
+      animate={isFlashing ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+      transition={{ duration: 0.6 }}
     >
       {cell.value !== null ? (
         <span
           className={[
-            'text-[clamp(16px,3.4vmin,28px)] leading-none',
+            'text-[clamp(15px,3.6vmin,26px)] leading-none font-medium',
             textClass,
           ].join(' ')}
         >
@@ -71,12 +69,12 @@ export function SudokuCell({ index, isFlashing }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-[2px]"
+              className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-[1px]"
             >
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
                 <span
                   key={n}
-                  className="flex items-center justify-center text-[clamp(9px,2vmin,12px)] text-(--color-text-pencil) font-medium leading-none"
+                  className="flex items-center justify-center text-[clamp(8px,1.8vmin,11px)] text-(--color-text-pencil) leading-none"
                 >
                   {cell.pencilMarks.includes(n) ? n : ''}
                 </span>
