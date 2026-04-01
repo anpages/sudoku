@@ -3,26 +3,32 @@
   "outputDirectory": "dist",
   "buildCommand": "npm run build",
   "devCommand": "vite --port 3000",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/sw.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
+      "src": "/sw\\.js",
+      "headers": { "Cache-Control": "public, max-age=0, must-revalidate" },
+      "continue": true
     },
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-XSS-Protection", "value": "1; mode=block" }
-      ]
+      "src": "/api/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block"
+      },
+      "continue": true
+    },
+    {
+      "src": "/api/auth/(.*)",
+      "dest": "/api/auth/[...all]"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "crons": [
