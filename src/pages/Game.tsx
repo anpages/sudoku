@@ -1,0 +1,80 @@
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { GameScreen } from '@/components/game/GameScreen'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { api } from '@/lib/api'
+import type { Difficulty, PuzzleSession } from '@/shared/types'
+import { DIFFICULTY_CONFIG } from '@/shared/constants'
+
+export function Game() {
+  const { difficulty } = useParams<{ difficulty: Difficulty }>()
+  const navigate = useNavigate()
+  const [session, setSession] = useState<PuzzleSession | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const diff = difficulty as Difficulty
+
+  useEffect(() => {
+    if (!diff || !DIFFICULTY_CONFIG[diff]) {
+      navigate('/', { replace: true })
+      return
+    }
+
+    async function loadPuzzle() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await api.post<PuzzleSession>('/api/puzzle/generate', { difficulty: diff })
+        setSession(data)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Error al cargar el puzzle')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadPuzzle()
+  }, [diff, navigate])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-(--color-primary) border-t-transparent rounded-full animate-spin" />
+          <p className="text-(--color-text-muted) text-sm">Generando puzzle...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !session) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-(--color-text-error) mb-4">{error ?? 'Error desconocido'}</p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-4 py-2 bg-(--color-primary) text-white rounded-lg"
+          >
+            Volver al inicio
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col justify-center">
+        <ErrorBoundary>
+          <GameScreen
+            givens={session.givens}
+            puzzleId={session.puzzleId}
+            sessionToken={session.sessionToken}
+            difficulty={diff}
+          />
+        </ErrorBoundary>
+      </div>
+    </div>
+  )
+}

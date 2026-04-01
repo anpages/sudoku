@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand */
+  --color-primary: #1a6bcc;
+  --color-primary-light: #4a9eff;
+  --color-primary-dark: #1456a8;
+
+  /* Surfaces - Light */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f0f4fa;
+  --color-surface-raised: #e8f0fb;
+
+  /* Borders - Light */
+  --color-border: #c8d6e8;
+  --color-border-strong: #9ab0d0;
+
+  /* Board cells - Light */
+  --color-cell-given: #f0f4fa;
+  --color-cell-selected: #bbdefb;
+  --color-cell-highlight: #e3f2fd;
+  --color-cell-same-number: #c5e1f5;
+  --color-cell-error: #ffcdd2;
+  --color-cell-error-bg: #fff0f0;
+
+  /* Text - Light */
+  --color-text: #1a1a2e;
+  --color-text-muted: #5a6a7a;
+  --color-text-given: #1a1a2e;
+  --color-text-input: #1a6bcc;
+  --color-text-error: #c62828;
+  --color-text-pencil: #5a6a7a;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.dark {
+  --color-primary: #4a9eff;
+  --color-primary-light: #74baff;
+  --color-primary-dark: #2d7dd2;
+
+  --color-surface: #0d1b2a;
+  --color-surface-alt: #162232;
+  --color-surface-raised: #1a2a3e;
+
+  --color-border: #1e3a5f;
+  --color-border-strong: #2d5080;
+
+  --color-cell-given: #162232;
+  --color-cell-selected: #1e3a5f;
+  --color-cell-highlight: #162232;
+  --color-cell-same-number: #1a3050;
+  --color-cell-error: #4a1020;
+  --color-cell-error-bg: #3a0a18;
+
+  --color-text: #e8f0fe;
+  --color-text-muted: #8899aa;
+  --color-text-given: #e8f0fe;
+  --color-text-input: #74baff;
+  --color-text-error: #ef9a9a;
+  --color-text-pencil: #8899aa;
+}
+
+@keyframes flash {
+  0%, 100% { background-color: var(--color-cell-selected); }
+  50% { background-color: var(--color-primary); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-alt);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 3px;
+}

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#1a6bcc"/>
+
+  <!-- Sudoku grid (3x3 visible cells) -->
+  <!-- Outer border -->
+  <rect x="64" y="64" width="384" height="384" rx="16" fill="none" stroke="white" stroke-width="12"/>
+
+  <!-- Box dividers (thick) -->
+  <!-- Vertical thick lines -->
+  <line x1="192" y1="64" x2="192" y2="448" stroke="white" stroke-width="8"/>
+  <line x1="320" y1="64" x2="320" y2="448" stroke="white" stroke-width="8"/>
+  <!-- Horizontal thick lines -->
+  <line x1="64" y1="192" x2="448" y2="192" stroke="white" stroke-width="8"/>
+  <line x1="64" y1="320" x2="448" y2="320" stroke="white" stroke-width="8"/>
+
+  <!-- Inner cell lines (thin) -->
+  <!-- Vertical thin -->
+  <line x1="128" y1="64" x2="128" y2="192" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="256" y1="64" x2="256" y2="192" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="128" y1="192" x2="128" y2="320" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="256" y1="192" x2="256" y2="320" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="128" y1="320" x2="128" y2="448" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="256" y1="320" x2="256" y2="448" stroke="white" stroke-width="3" opacity="0.6"/>
+  <!-- Horizontal thin -->
+  <line x1="64" y1="128" x2="192" y2="128" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="64" y1="256" x2="192" y2="256" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="192" y1="128" x2="320" y2="128" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="192" y1="256" x2="320" y2="256" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="320" y1="128" x2="448" y2="128" stroke="white" stroke-width="3" opacity="0.6"/>
+  <line x1="320" y1="256" x2="448" y2="256" stroke="white" stroke-width="3" opacity="0.6"/>
+
+  <!-- Some numbers for visual appeal -->
+  <text x="96" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="44" fill="white">5</text>
+  <text x="352" y="238" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="44" fill="white">3</text>
+  <text x="224" y="366" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="44" fill="white">7</text>
+  <text x="160" y="238" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="44" fill="white" opacity="0.7">9</text>
+  <text x="416" y="366" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="44" fill="white" opacity="0.7">2</text>
+</svg>
