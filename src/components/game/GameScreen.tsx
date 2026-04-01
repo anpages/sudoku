@@ -20,20 +20,6 @@ interface Props {
   difficulty: Difficulty
 }
 
-function BackButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1 text-sm text-(--color-text-muted) hover:text-(--color-primary) transition-colors"
-    >
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-        <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      Inicio
-    </button>
-  )
-}
-
 export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props) {
   const navigate = useNavigate()
   const initGame = useGameStore((s) => s.initGame)
@@ -62,7 +48,6 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     }
   }, [puzzleId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Submit completion when status becomes 'complete'
   useEffect(() => {
     if (status !== 'complete') return
 
@@ -79,7 +64,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         })
         setCompletionResult(result)
       } catch {
-        // silent — will retry on next visit
+        // silent
       } finally {
         setSyncing(false)
       }
@@ -106,60 +91,48 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
   function handleRestart() {
     resetGame()
     resetTimer()
+    setCompletionResult(null)
     initGame({ givens, puzzleId, sessionToken, difficulty })
     startTimer(sessionToken)
-    setCompletionResult(null)
   }
 
   const config = DIFFICULTY_CONFIG[difficulty]
 
+  // Shared board-column max-w classes (info row + board share the same constraint)
+  const boardMaxW = 'max-w-[min(90vw,calc(90vh-280px),480px)] lg:max-w-[min(calc(100vh-200px),560px)]'
+
   return (
-    <div className="flex flex-col items-center gap-4 px-4 py-4 w-full max-w-5xl mx-auto">
+    <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 px-4 py-4 w-full max-w-5xl mx-auto">
 
-      {/* ── Mobile header row ── */}
-      <div className="flex lg:hidden items-center justify-between w-full">
-        <BackButton onClick={() => navigate('/')} />
-        <span className="text-sm font-semibold" style={{ color: config.color }}>
-          {config.label}
-        </span>
-        <div className="text-xl font-mono font-bold text-(--color-text) tabular-nums">
-          {formatTime(elapsed)}
+      {/* ── Board column (both layouts) ── */}
+      <div className={`flex flex-col items-stretch gap-3 w-full ${boardMaxW}`}>
+
+        {/* Info row: level · timer · errors */}
+        <div className="flex items-center justify-between w-full">
+          <span className="text-sm font-semibold" style={{ color: config.color }}>
+            {config.label}
+          </span>
+          <div className="text-xl font-mono font-bold text-(--color-text) tabular-nums">
+            {formatTime(elapsed)}
+          </div>
+          <ErrorBanner errors={errors} />
         </div>
-        <ErrorBanner errors={errors} />
-      </div>
 
-      {/* ── Main content: board + right panel ── */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 w-full">
-
-        {/* Board */}
+        {/* Board fills the column width */}
         <SudokuBoard />
 
-        {/* Right panel (desktop only) */}
-        <div className="hidden lg:flex flex-col gap-5 min-w-[200px] pt-1">
-          <BackButton onClick={() => navigate('/')} />
-
-          <div>
-            <div className="text-sm font-semibold mb-1" style={{ color: config.color }}>
-              {config.label}
-            </div>
-            <div className="text-4xl font-mono font-bold text-(--color-text) tabular-nums leading-none">
-              {formatTime(elapsed)}
-            </div>
-          </div>
-
-          <ErrorBanner errors={errors} />
-
+        {/* Mobile-only controls below board */}
+        <div className="lg:hidden flex flex-col items-center gap-4 w-full mt-1">
           <ActionBar onHint={handleHint} onRestart={handleRestart} />
+          <NumberPad />
         </div>
       </div>
 
-      {/* ── Controls below board ── */}
-      {/* Action bar: mobile only (desktop has it in right panel) */}
-      <div className="lg:hidden w-full flex justify-center">
+      {/* ── Right panel (desktop only) ── */}
+      <div className="hidden lg:flex flex-col gap-5 w-80 shrink-0 pt-10">
         <ActionBar onHint={handleHint} onRestart={handleRestart} />
+        <NumberPad />
       </div>
-
-      <NumberPad />
 
       {status === 'complete' && !syncing && completionResult && (
         <CompletionModal

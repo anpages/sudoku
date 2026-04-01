@@ -17,7 +17,7 @@ export function SudokuBoard() {
     : []
 
   return (
-    <div className="relative w-full max-w-[min(90vw,calc(90vh-280px),480px)] lg:max-w-[min(calc(100vh-200px),560px)] aspect-square mx-auto">
+    <div className="relative w-full aspect-square">
       <div
         className="grid grid-cols-9 w-full h-full border-2 border-(--color-border-strong) rounded-sm overflow-hidden shadow-lg"
         role="grid"
