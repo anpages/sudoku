@@ -91,9 +91,24 @@ export function Home() {
             </motion.button>
           )}
 
-          {/* New game */}
+          {/* Random game — primary CTA */}
+          {!hasSavedGame && (
+            <motion.button
+              variants={fadeUp}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
+                navigate(`/juego/${key}`)
+              }}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-(--color-primary) text-white text-base font-semibold shadow-lg shadow-(--color-primary)/20 hover:shadow-xl hover:shadow-(--color-primary)/30 transition-shadow"
+            >
+              Partida rápida
+            </motion.button>
+          )}
+
+          {/* Choose difficulty */}
           <motion.div variants={fadeUp} className="w-full flex flex-col gap-3">
-            {/* Difficulty pills */}
             <div className="grid grid-cols-3 gap-2">
               {DIFFICULTY_KEYS.map((key) => {
                 const cfg = DIFFICULTY_CONFIG[key]
@@ -116,19 +131,13 @@ export function Home() {
               })}
             </div>
 
-            {/* Play button */}
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               onClick={handlePlay}
-              className={[
-                'w-full py-4 rounded-2xl text-base font-semibold transition-all duration-200',
-                hasSavedGame
-                  ? 'border border-(--color-border) text-(--color-text) hover:bg-(--color-surface-alt)'
-                  : 'bg-(--color-primary) text-white shadow-lg shadow-(--color-primary)/20 hover:shadow-xl hover:shadow-(--color-primary)/30',
-              ].join(' ')}
+              className="w-full py-3.5 rounded-2xl text-sm font-semibold border border-(--color-border) text-(--color-text) hover:bg-(--color-surface-alt) transition-colors"
             >
-              Jugar
+              Elegir dificultad
             </motion.button>
           </motion.div>
 
@@ -183,17 +192,6 @@ export function Home() {
             </motion.div>
           )}
 
-          {/* Random game — subtle link */}
-          <motion.button
-            variants={fadeUp}
-            onClick={() => {
-              const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
-              navigate(`/juego/${key}`)
-            }}
-            className="text-sm text-(--color-text-muted) hover:text-(--color-primary) transition-colors font-medium"
-          >
-            Partida aleatoria
-          </motion.button>
         </motion.div>
       </main>
     </div>

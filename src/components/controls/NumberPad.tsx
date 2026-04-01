@@ -67,14 +67,14 @@ export function NumberPad() {
 
   return (
     <>
-      {/* Mobile: 2 columns — left 1-5, right 6-9 + erase */}
-      <div className="grid grid-cols-2 gap-2 w-full lg:hidden">
-        <div className="flex flex-col gap-2">
+      {/* Mobile: 2 rows — top 1-5, bottom 6-9 + erase */}
+      <div className="flex flex-col gap-2 w-full lg:hidden">
+        <div className="grid grid-cols-5 gap-2">
           {[1, 2, 3, 4, 5].map((n) => (
             <DigitButton key={n} digit={n} disabled={disabled} />
           ))}
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {[6, 7, 8, 9].map((n) => (
             <DigitButton key={n} digit={n} disabled={disabled} />
           ))}
