@@ -1,146 +1,79 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware.js'
-import { generatePuzzle } from '../lib/puzzle-generator.js'
-import { signSessionToken, verifySessionToken, validateElapsedTime } from '../lib/anti-cheat.js'
-import { db } from '../lib/db.js'
-import { puzzles, puzzleSessions, completions, weeklyRankings } from '../../drizzle/schema.js'
-import { eq, and } from 'drizzle-orm'
-import { calculateAdjustedTime } from '../../src/shared/scoring.js'
-import { sql } from 'drizzle-orm'
 
-/**
- * GET /api/debug/test-save
- *
- * Simulates the full save pipeline:
- * 1. Generate a puzzle
- * 2. Create a session
- * 3. Submit the solution to /validate logic
- * 4. Check if the completion was saved
- * 5. Clean up test data
- *
- * Returns a step-by-step log of what happened.
- */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') return errorResponse(res, 'GET only', 405)
-
-  const session = await requireAuth(req, res)
-  if (!session) return
-
-  const log: string[] = []
-  const userId = session.user.id
+  const checks: string[] = []
 
   try {
-    // Step 1: Generate puzzle
-    const { givens, solution } = generatePuzzle('facil')
-    log.push(`1. Generated puzzle: givens=${givens.slice(0, 20)}… solution=${solution.slice(0, 20)}…`)
+    // Test 1: Basic function works
+    checks.push('1. Function running OK')
 
-    // Step 2: Store puzzle
-    const [puzzle] = await db.insert(puzzles).values({
-      difficulty: 'facil',
-      givens,
-      solution,
-    }).returning({ id: puzzles.id })
-    log.push(`2. Puzzle stored: id=${puzzle.id}`)
-
-    // Step 3: Create session
-    const startedAt = Date.now() - 120_000 // pretend started 2 min ago
-    const sessionToken = signSessionToken({ puzzleId: puzzle.id, userId, startedAt })
-    log.push(`3. Session token created: ${sessionToken.slice(0, 30)}…`)
-
-    await db.insert(puzzleSessions).values({
-      userId,
-      puzzleId: puzzle.id,
-      sessionToken,
-      startedAt: new Date(startedAt),
-      status: 'active',
-    })
-    log.push('4. Puzzle session inserted (status=active)')
-
-    // Step 4: Verify token works
-    const payload = verifySessionToken(sessionToken)
-    if (!payload) {
-      log.push('5. ERROR: Token verification failed!')
-      return res.status(200).json({ success: false, log })
-    }
-    log.push(`5. Token verified: puzzleId=${payload.puzzleId}, userId=${payload.userId}`)
-
-    // Step 5: Validate board (simulating what validate.ts does)
-    const board = solution // we're submitting the correct solution
-    const elapsed = 120
-
-    const [psRow] = await db.select().from(puzzleSessions)
-      .where(and(eq(puzzleSessions.sessionToken, sessionToken), eq(puzzleSessions.userId, userId)))
-      .limit(1)
-
-    if (!psRow) {
-      log.push('6. ERROR: Session not found in DB!')
-      return res.status(200).json({ success: false, log })
-    }
-    log.push(`6. Session found in DB: status=${psRow.status}`)
-
-    // Step 6: Compare board to solution
-    const [puzzleRow] = await db.select({ solution: puzzles.solution })
-      .from(puzzles).where(eq(puzzles.id, payload.puzzleId)).limit(1)
-
-    if (!puzzleRow) {
-      log.push('7. ERROR: Puzzle not found!')
-      return res.status(200).json({ success: false, log })
+    // Test 2: Auth
+    try {
+      const { requireAuth } = await import('../lib/middleware.js')
+      const session = await requireAuth(req, res)
+      if (!session) {
+        checks.push('2. Auth: NOT authenticated (need login)')
+        return // requireAuth already sent 401
+      }
+      checks.push(`2. Auth OK: ${session.user.email}`)
+    } catch (e) {
+      checks.push(`2. Auth ERROR: ${e instanceof Error ? e.message : e}`)
+      return res.status(200).json({ checks })
     }
 
-    const boardMatch = board === puzzleRow.solution
-    log.push(`7. Board comparison: match=${boardMatch}`)
-
-    if (!boardMatch) {
-      log.push('   ERROR: Board does NOT match solution!')
-      return res.status(200).json({ success: false, log })
+    // Test 3: DB
+    try {
+      const { db } = await import('../lib/db.js')
+      const result = await db.execute({ sql: 'SELECT 1 as test', params: [] } as any)
+      checks.push('3. DB connection OK')
+    } catch (e) {
+      checks.push(`3. DB ERROR: ${e instanceof Error ? e.message : e}`)
+      return res.status(200).json({ checks })
     }
 
-    // Step 7: Calculate adjusted time
-    const { trusted } = validateElapsedTime(elapsed, payload.startedAt)
-    const adjustedTime = calculateAdjustedTime(trusted, 0, 0)
-    log.push(`8. Adjusted time: ${adjustedTime}s (trusted=${trusted}s)`)
-
-    // Step 8: Mark session completed
-    await db.update(puzzleSessions)
-      .set({ status: 'completed', hintsUsed: 0, errorsMade: 0 })
-      .where(eq(puzzleSessions.sessionToken, sessionToken))
-    log.push('9. Session marked as completed')
-
-    // Step 9: Insert completion
-    await db.insert(completions).values({
-      userId,
-      puzzleId: payload.puzzleId,
-      sessionToken,
-      elapsedSeconds: trusted,
-      errorsMade: 0,
-      hintsUsed: 0,
-      adjustedTime,
-      difficulty: 'facil',
-      completedAt: new Date(),
-    })
-    log.push('10. Completion inserted')
-
-    // Step 10: Verify it was saved
-    const [saved] = await db.select({ id: completions.id, adjustedTime: completions.adjustedTime })
-      .from(completions)
-      .where(and(eq(completions.userId, userId), eq(completions.puzzleId, payload.puzzleId)))
-      .limit(1)
-
-    if (!saved) {
-      log.push('11. ERROR: Completion NOT found after insert!')
-      return res.status(200).json({ success: false, log })
+    // Test 4: Schema imports
+    try {
+      const schema = await import('../../drizzle/schema.js')
+      checks.push(`4. Schema OK: tables=[${Object.keys(schema).join(',')}]`)
+    } catch (e) {
+      checks.push(`4. Schema ERROR: ${e instanceof Error ? e.message : e}`)
+      return res.status(200).json({ checks })
     }
-    log.push(`11. Completion verified in DB: id=${saved.id}, adjustedTime=${saved.adjustedTime}`)
 
-    // Step 11: Clean up test data
-    await db.delete(completions).where(eq(completions.id, saved.id))
-    await db.delete(puzzleSessions).where(eq(puzzleSessions.sessionToken, sessionToken))
-    await db.delete(puzzles).where(eq(puzzles.id, puzzle.id))
-    log.push('12. Test data cleaned up')
+    // Test 5: Anti-cheat
+    try {
+      const { signSessionToken, verifySessionToken } = await import('../lib/anti-cheat.js')
+      const token = signSessionToken({ puzzleId: 'test', userId: 'test', startedAt: Date.now() })
+      const payload = verifySessionToken(token)
+      checks.push(`5. Anti-cheat OK: token=${token.slice(0, 20)}… verified=${!!payload}`)
+    } catch (e) {
+      checks.push(`5. Anti-cheat ERROR: ${e instanceof Error ? e.message : e}`)
+      return res.status(200).json({ checks })
+    }
 
-    res.status(200).json({ success: true, log })
+    // Test 6: Scoring
+    try {
+      const { calculateAdjustedTime } = await import('../../src/shared/scoring.js')
+      const time = calculateAdjustedTime(100, 2, 1)
+      checks.push(`6. Scoring OK: calculateAdjustedTime(100,2,1)=${time}`)
+    } catch (e) {
+      checks.push(`6. Scoring ERROR: ${e instanceof Error ? e.message : e}`)
+      return res.status(200).json({ checks })
+    }
+
+    // Test 7: Drizzle operators
+    try {
+      const { eq, and, asc, sql } = await import('drizzle-orm')
+      checks.push(`7. Drizzle operators OK: eq=${typeof eq}, sql=${typeof sql}`)
+    } catch (e) {
+      checks.push(`7. Drizzle operators ERROR: ${e instanceof Error ? e.message : e}`)
+      return res.status(200).json({ checks })
+    }
+
+    checks.push('ALL CHECKS PASSED')
+    res.status(200).json({ checks })
   } catch (e) {
-    log.push(`ERROR: ${e instanceof Error ? e.message : String(e)}`)
-    res.status(200).json({ success: false, log })
+    checks.push(`FATAL: ${e instanceof Error ? e.message : e}`)
+    res.status(200).json({ checks })
   }
 }

@@ -16,6 +16,15 @@ function getWeekStart(date: Date): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    return await handleValidate(req, res)
+  } catch (e) {
+    console.error('[validate] Unhandled error:', e)
+    res.status(500).json({ error: 'Internal error', detail: e instanceof Error ? e.message : String(e) })
+  }
+}
+
+async function handleValidate(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return errorResponse(res, 'Método no permitido', 405)
 
   const session = await requireAuth(req, res)
