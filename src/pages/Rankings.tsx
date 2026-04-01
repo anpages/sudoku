@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Header } from '@/components/layout/Header'
 import { api } from '@/lib/api'
-import { formatTime } from '@/shared/scoring'
 import type { WeeklyRankingEntry } from '@/shared/types'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -71,7 +70,7 @@ function WeeklyRankingList({ currentUserId }: { currentUserId?: string }) {
 
             <span className="flex-1 font-medium text-sm text-(--color-text) truncate">{e.name}</span>
             <span className="font-mono text-sm font-semibold text-(--color-primary)">
-              {formatTime(e.totalAdjustedTime)} · {e.gamesPlayed} partidas
+              {e.gamesPlayed} partida{e.gamesPlayed !== 1 ? 's' : ''}
             </span>
           </div>
         )

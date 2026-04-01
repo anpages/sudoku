@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth, errorResponse } from '../lib/middleware.js'
 import { db } from '../lib/db.js'
-import { dailyPuzzles, puzzles } from '../../drizzle/schema.js'
-import { eq } from 'drizzle-orm'
+import { dailyPuzzles, puzzles, completions } from '../../drizzle/schema.js'
+import { eq, and, asc } from 'drizzle-orm'
 import { generatePuzzle } from '../lib/puzzle-generator.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -51,6 +51,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
-  res.status(200).json(daily)
+  // Check if this user already completed today's puzzle
+  const [myComp] = await db
+    .select({
+      adjustedTime: completions.adjustedTime,
+      elapsedSeconds: completions.elapsedSeconds,
+      hintsUsed: completions.hintsUsed,
+      errorsMade: completions.errorsMade,
+    })
+    .from(completions)
+    .where(and(
+      eq(completions.userId, session.user.id),
+      eq(completions.dailyPuzzleId, daily.id),
+    ))
+    .limit(1)
+
+  let myRank: number | null = null
+  if (myComp) {
+    const allRows = await db
+      .select({ userId: completions.userId })
+      .from(completions)
+      .where(eq(completions.dailyPuzzleId, daily.id))
+      .orderBy(asc(completions.adjustedTime))
+    const idx = allRows.findIndex((r) => r.userId === session.user.id)
+    myRank = idx === -1 ? null : idx + 1
+  }
+
+  // Response is personalized — do not cache publicly
+  res.setHeader('Cache-Control', 'private, no-store')
+  res.status(200).json({
+    ...daily,
+    myCompletion: myComp ? { ...myComp, rank: myRank } : null,
+  })
 }

@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header'
 import { api } from '@/lib/api'
 import { useGameStore } from '@/store/game-store'
 import { useTimerStore } from '@/store/timer-store'
+import { DailyCompletionView } from '@/components/daily/DailyCompletionView'
 import type { DailyPuzzle } from '@/shared/types'
 
 export function Daily() {
@@ -12,6 +13,7 @@ export function Daily() {
   const [daily, setDaily] = useState<DailyPuzzle | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [forcePlay, setForcePlay] = useState(false)
 
   useEffect(() => {
     api.get<DailyPuzzle>('/api/puzzle/daily')
@@ -43,6 +45,22 @@ export function Daily() {
               Volver
             </button>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Already completed today — show ranking view (unless user chose to play again)
+  if (daily.myCompletion && !forcePlay) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex-1 overflow-y-auto">
+          <DailyCompletionView
+            daily={daily}
+            myCompletion={daily.myCompletion}
+            onPlay={() => setForcePlay(true)}
+          />
         </div>
       </div>
     )

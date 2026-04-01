@@ -57,12 +57,21 @@ export interface WeeklyRankingEntry {
   gamesPlayed: number
 }
 
+export interface DailyCompletion {
+  adjustedTime: number
+  elapsedSeconds: number
+  hintsUsed: number
+  errorsMade: number
+  rank: number | null
+}
+
 export interface DailyPuzzle {
   id: string          // daily_puzzle id
   puzzleId: string
   date: string        // YYYY-MM-DD
   difficulty: Difficulty
   givens: string
+  myCompletion: DailyCompletion | null
 }
 
 export interface UserProfile {
