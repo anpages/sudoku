@@ -107,9 +107,9 @@ export function Home() {
             </motion.button>
           )}
 
-          {/* Choose difficulty */}
-          <motion.div variants={fadeUp} className="w-full flex flex-col gap-3">
-            <div className="grid grid-cols-3 gap-2">
+          {/* Choose difficulty — compact inline */}
+          <motion.div variants={fadeUp} className="w-full flex items-center gap-2">
+            <div className="flex-1 flex gap-1 overflow-x-auto">
               {DIFFICULTY_KEYS.map((key) => {
                 const cfg = DIFFICULTY_CONFIG[key]
                 const active = selectedDiff === key
@@ -118,26 +118,24 @@ export function Home() {
                     key={key}
                     onClick={() => setSelectedDiff(key)}
                     className={[
-                      'relative py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                      'px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200',
                       active
-                        ? 'text-white shadow-md'
-                        : 'text-(--color-text-muted) bg-(--color-surface-alt) hover:bg-(--color-surface-raised)',
+                        ? 'text-white'
+                        : 'text-(--color-text-muted) hover:text-(--color-text)',
                     ].join(' ')}
-                    style={active ? { backgroundColor: cfg.color, boxShadow: `0 4px 14px ${cfg.color}33` } : undefined}
+                    style={active ? { backgroundColor: cfg.color } : undefined}
                   >
                     {cfg.label}
                   </button>
                 )
               })}
             </div>
-
             <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handlePlay}
-              className="w-full py-3.5 rounded-2xl text-sm font-semibold border border-(--color-border) text-(--color-text) hover:bg-(--color-surface-alt) transition-colors"
+              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-semibold text-(--color-primary) hover:bg-(--color-surface-alt) transition-colors"
             >
-              Elegir dificultad
+              Jugar →
             </motion.button>
           </motion.div>
 
