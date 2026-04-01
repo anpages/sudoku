@@ -192,7 +192,11 @@ export const useGameStore = create<GameStore>()(
     const completed = getCompletedCells(withConflicts, selected)
     if (completed.length > 0) {
       set({ flashingCells: completed, locked: true })
-      setTimeout(() => set({ flashingCells: null, locked: false }), FLASH_DURATION_MS)
+      setTimeout(() => {
+        // Only unlock if still playing — don't unlock after completion/failure
+        const s = get().status
+        set({ flashingCells: null, locked: s !== 'playing' })
+      }, FLASH_DURATION_MS)
     }
 
     // Check completion: all filled AND no conflicts anywhere on the board

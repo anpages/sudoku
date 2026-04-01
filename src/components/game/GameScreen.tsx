@@ -37,6 +37,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
 
   const [completionResult, setCompletionResult] = useState<CompletionResult | null>(null)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const submittingRef = useRef(false)
 
   useKeyboard(null)
@@ -70,34 +71,47 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     if (status === 'complete' || status === 'failed') pauseTimer()
   }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Submit completion to server — modal only shows AFTER this finishes
+  // Submit completion to server
+  const submitCompletion = useCallback(async () => {
+    if (submittingRef.current) return
+    submittingRef.current = true
+    setSubmitError(null)
+    setSubmitted(false)
+
+    // Read fresh values from stores to avoid stale closures
+    const currentCells = useGameStore.getState().cells
+    const currentElapsed = useTimerStore.getState().elapsed
+    const currentHints = useGameStore.getState().hintsUsed
+    const currentErrors = useGameStore.getState().errors
+
+    const board = currentCells.map((c) => c.value ?? 0).join('')
+    try {
+      const result = await api.post<CompletionResult>('/api/puzzle/validate', {
+        sessionToken,
+        board,
+        elapsedSeconds: currentElapsed,
+        hintsUsed: currentHints,
+        errorsMade: currentErrors,
+      })
+      setCompletionResult(result)
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error desconocido'
+      console.error('[sudoku] Error al guardar partida:', msg)
+      setSubmitError(msg)
+    } finally {
+      submittingRef.current = false
+      setSubmitted(true)
+    }
+  }, [sessionToken])
+
+  // Auto-submit on completion
   useEffect(() => {
     if (status !== 'complete') {
       setSubmitted(false)
+      setSubmitError(null)
       return
     }
-    if (submittingRef.current) return
-    submittingRef.current = true
-
-    async function submit() {
-      const board = cells.map((c) => c.value ?? 0).join('')
-      try {
-        const result = await api.post<CompletionResult>('/api/puzzle/validate', {
-          sessionToken,
-          board,
-          elapsedSeconds: elapsed,
-          hintsUsed,
-          errorsMade: errors,
-        })
-        setCompletionResult(result)
-      } catch (e) {
-        console.error('[sudoku] Error al guardar partida:', e)
-      } finally {
-        submittingRef.current = false
-        setSubmitted(true)
-      }
-    }
-    submit()
+    submitCompletion()
   }, [status]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleHint = useCallback(async () => {
@@ -118,6 +132,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     resetTimer()
     setCompletionResult(null)
     setSubmitted(false)
+    setSubmitError(null)
     initGame({ givens, puzzleId, sessionToken, difficulty })
     startTimer(sessionToken)
   }
@@ -169,7 +184,31 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         </div>
       )}
 
-      {status === 'complete' && submitted && (
+      {status === 'complete' && submitted && submitError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-(--color-surface) rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h2 className="text-xl font-bold text-(--color-text) mb-2">Error al guardar</h2>
+            <p className="text-sm text-(--color-text-muted) mb-6">{submitError}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="flex-1 py-3 rounded-xl border-2 border-(--color-border) text-(--color-text) font-semibold hover:bg-(--color-surface-alt) transition-colors"
+              >
+                Inicio
+              </button>
+              <button
+                onClick={submitCompletion}
+                className="flex-1 py-3 rounded-xl bg-(--color-primary) text-white font-semibold hover:opacity-90 transition-opacity"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {status === 'complete' && submitted && !submitError && (
         <CompletionModal
           difficulty={difficulty}
           elapsedSeconds={elapsed}
