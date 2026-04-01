@@ -20,6 +20,20 @@ interface Props {
   difficulty: Difficulty
 }
 
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1 text-sm text-(--color-text-muted) hover:text-(--color-primary) transition-colors"
+    >
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+        <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      Inicio
+    </button>
+  )
+}
+
 export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props) {
   const navigate = useNavigate()
   const initGame = useGameStore((s) => s.initGame)
@@ -80,7 +94,6 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
         sessionToken,
         currentBoard,
       })
-      // Build partial solution string for useHint — only the hinted cell's digit is known
       const partial = cells.map((c, i) =>
         i === res.index ? res.digit : (c.value ?? 0),
       ).join('')
@@ -95,28 +108,57 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     resetTimer()
     initGame({ givens, puzzleId, sessionToken, difficulty })
     startTimer(sessionToken)
+    setCompletionResult(null)
   }
 
   const config = DIFFICULTY_CONFIG[difficulty]
 
   return (
-    <div className="flex flex-col items-center gap-4 px-4 py-4 min-h-0 w-full">
-      {/* Header row: difficulty + timer + errors */}
-      <div className="flex items-center justify-between w-full max-w-[min(90vw,480px)]">
+    <div className="flex flex-col items-center gap-4 px-4 py-4 w-full max-w-5xl mx-auto">
+
+      {/* ── Mobile header row ── */}
+      <div className="flex lg:hidden items-center justify-between w-full">
+        <BackButton onClick={() => navigate('/')} />
         <span className="text-sm font-semibold" style={{ color: config.color }}>
           {config.label}
         </span>
-
         <div className="text-xl font-mono font-bold text-(--color-text) tabular-nums">
           {formatTime(elapsed)}
         </div>
-
         <ErrorBanner errors={errors} />
       </div>
 
-      <SudokuBoard />
+      {/* ── Main content: board + right panel ── */}
+      <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 w-full">
 
-      <ActionBar onHint={handleHint} onRestart={handleRestart} />
+        {/* Board */}
+        <SudokuBoard />
+
+        {/* Right panel (desktop only) */}
+        <div className="hidden lg:flex flex-col gap-5 min-w-[200px] pt-1">
+          <BackButton onClick={() => navigate('/')} />
+
+          <div>
+            <div className="text-sm font-semibold mb-1" style={{ color: config.color }}>
+              {config.label}
+            </div>
+            <div className="text-4xl font-mono font-bold text-(--color-text) tabular-nums leading-none">
+              {formatTime(elapsed)}
+            </div>
+          </div>
+
+          <ErrorBanner errors={errors} />
+
+          <ActionBar onHint={handleHint} onRestart={handleRestart} />
+        </div>
+      </div>
+
+      {/* ── Controls below board ── */}
+      {/* Action bar: mobile only (desktop has it in right panel) */}
+      <div className="lg:hidden w-full flex justify-center">
+        <ActionBar onHint={handleHint} onRestart={handleRestart} />
+      </div>
+
       <NumberPad />
 
       {status === 'complete' && !syncing && completionResult && (

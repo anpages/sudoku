@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { GameScreen } from '@/components/game/GameScreen'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { Header } from '@/components/layout/Header'
 import { api } from '@/lib/api'
 import type { Difficulty, PuzzleSession } from '@/shared/types'
 import { DIFFICULTY_CONFIG } from '@/shared/constants'
@@ -38,10 +39,13 @@ export function Game() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-(--color-primary) border-t-transparent rounded-full animate-spin" />
-          <p className="text-(--color-text-muted) text-sm">Generando puzzle...</p>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-4 border-(--color-primary) border-t-transparent rounded-full animate-spin" />
+            <p className="text-(--color-text-muted) text-sm">Generando puzzle...</p>
+          </div>
         </div>
       </div>
     )
@@ -49,15 +53,18 @@ export function Game() {
 
   if (error || !session) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <p className="text-(--color-text-error) mb-4">{error ?? 'Error desconocido'}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-4 py-2 bg-(--color-primary) text-white rounded-lg"
-          >
-            Volver al inicio
-          </button>
+      <div className="flex flex-col min-h-screen">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-(--color-text-error) mb-4">{error ?? 'Error desconocido'}</p>
+            <button
+              onClick={() => navigate('/')}
+              className="px-4 py-2 bg-(--color-primary) text-white rounded-lg"
+            >
+              Volver al inicio
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -65,7 +72,8 @@ export function Game() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="flex-1 flex flex-col justify-center">
+      <Header />
+      <div className="flex-1 flex flex-col">
         <ErrorBoundary>
           <GameScreen
             givens={session.givens}

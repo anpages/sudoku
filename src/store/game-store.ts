@@ -119,22 +119,7 @@ export const useGameStore = create<GameStore>()((set, get) => ({
       return c
     })
 
-    set({ cells: updated })
-
-    // Check if this digit is now fully placed (all 9 instances)
-    const count = updated.filter((c) => c.value === digit).length
-    if (count === 9) {
-      set({ flashingDigit: digit, locked: true })
-      setTimeout(() => set({ flashingDigit: null, locked: false }), FLASH_DURATION_MS)
-    }
-
-    // Check completion
-    const allFilled = updated.every((c) => c.value !== null)
-    if (allFilled) get().setComplete()
-
-    // Note: error detection happens via server-side validate, not here
-    // Client only shows conflicts (same digit in peer), not wrong-vs-solution
-    // Mark conflicts
+    // Detect conflicts (client shows same-peer duplicates, server validates correctness)
     const withConflicts = updated.map((c, i) => {
       if (c.value === null || c.isGiven) return c
       const hasConflict = updated.some(
@@ -144,16 +129,27 @@ export const useGameStore = create<GameStore>()((set, get) => ({
     })
     set({ cells: withConflicts })
 
-    // Count new errors (digits placed that conflict)
-    const newErrors = withConflicts.filter((c, i) => {
-      if (i !== selected) return false
-      return c.isError
-    }).length
-    if (newErrors > 0) {
+    // Count new errors (only for the just-placed cell)
+    if (withConflicts[selected].isError) {
       const nextErrors = errors + 1
       set({ errors: nextErrors })
-      if (nextErrors >= MAX_ERRORS) get().setFailed()
+      if (nextErrors >= MAX_ERRORS) {
+        get().setFailed()
+        return
+      }
     }
+
+    // Check if this digit is now fully placed (all 9 instances)
+    const count = withConflicts.filter((c) => c.value === digit).length
+    if (count === 9) {
+      set({ flashingDigit: digit, locked: true })
+      setTimeout(() => set({ flashingDigit: null, locked: false }), FLASH_DURATION_MS)
+    }
+
+    // Check completion: all filled AND no conflicts anywhere on the board
+    const allFilled = withConflicts.every((c) => c.value !== null)
+    const hasAnyConflict = withConflicts.some((c) => c.isError)
+    if (allFilled && !hasAnyConflict) get().setComplete()
   },
 
   togglePencilMark: (digit) => {

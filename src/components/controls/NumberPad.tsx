@@ -16,7 +16,7 @@ export function NumberPad() {
   }
 
   return (
-    <div className="flex gap-2 justify-center flex-wrap max-w-[min(90vw,480px)] mx-auto">
+    <div className="flex gap-2 justify-center flex-wrap max-w-[min(90vw,480px)] lg:max-w-[min(calc(100vh-200px),560px)] mx-auto">
       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => {
         const remaining = getRemainingCount(n)
         const complete = remaining === 0
