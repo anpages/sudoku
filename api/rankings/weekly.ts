@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
-import { db } from '../lib/db'
-import { weeklyRankings, users } from '../../drizzle/schema'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
+import { db } from '../lib/db.js'
+import { weeklyRankings, users } from '../../drizzle/schema.js'
 import { eq, asc } from 'drizzle-orm'
 
 function getWeekStart(): string {

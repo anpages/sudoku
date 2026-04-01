@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
-import { db } from '../lib/db'
-import { completions } from '../../drizzle/schema'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
+import { db } from '../lib/db.js'
+import { completions } from '../../drizzle/schema.js'
 import { eq, asc } from 'drizzle-orm'
-import type { Difficulty } from '../../src/shared/types'
-import { DIFFICULTY_CONFIG } from '../../src/shared/constants'
+import type { Difficulty } from '../../src/shared/types.js'
+import { DIFFICULTY_CONFIG } from '../../src/shared/constants.js'
 
 function getConsecutiveDailyStreak(
   completedDates: string[],

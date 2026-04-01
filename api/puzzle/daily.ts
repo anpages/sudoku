@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
-import { db } from '../lib/db'
-import { dailyPuzzles, puzzles } from '../../drizzle/schema'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
+import { db } from '../lib/db.js'
+import { dailyPuzzles, puzzles } from '../../drizzle/schema.js'
 import { eq } from 'drizzle-orm'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

@@ -1,6 +1,6 @@
-import { hasUniqueSolution } from './puzzle-solver'
-import type { Difficulty } from '../../src/shared/types'
-import { DIFFICULTY_CONFIG } from '../../src/shared/constants'
+import { hasUniqueSolution } from './puzzle-solver.js'
+import type { Difficulty } from '../../src/shared/types.js'
+import { DIFFICULTY_CONFIG } from '../../src/shared/constants.js'
 
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice()

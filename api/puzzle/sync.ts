@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
-import { verifySessionToken } from '../lib/anti-cheat'
-import { db } from '../lib/db'
-import { puzzleSessions } from '../../drizzle/schema'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
+import { verifySessionToken } from '../lib/anti-cheat.js'
+import { db } from '../lib/db.js'
+import { puzzleSessions } from '../../drizzle/schema.js'
 import { and, eq } from 'drizzle-orm'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

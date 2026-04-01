@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
-import { generatePuzzle } from '../lib/puzzle-generator'
-import { signSessionToken } from '../lib/anti-cheat'
-import { db } from '../lib/db'
-import { puzzles, puzzleSessions } from '../../drizzle/schema'
-import type { Difficulty } from '../../src/shared/types'
-import { DIFFICULTY_CONFIG } from '../../src/shared/constants'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
+import { generatePuzzle } from '../lib/puzzle-generator.js'
+import { signSessionToken } from '../lib/anti-cheat.js'
+import { db } from '../lib/db.js'
+import { puzzles, puzzleSessions } from '../../drizzle/schema.js'
+import type { Difficulty } from '../../src/shared/types.js'
+import { DIFFICULTY_CONFIG } from '../../src/shared/constants.js'
 
 const VALID_DIFFICULTIES = Object.keys(DIFFICULTY_CONFIG) as Difficulty[]
 

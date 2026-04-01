@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { auth } from './auth'
+import { auth } from './auth.js'
 
 export async function requireAuth(req: VercelRequest, res: VercelResponse) {
   const session = await auth.api.getSession({

@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
-import { verifySessionToken, validateElapsedTime } from '../lib/anti-cheat'
-import { db } from '../lib/db'
-import { puzzles, puzzleSessions, completions, weeklyRankings } from '../../drizzle/schema'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
+import { verifySessionToken, validateElapsedTime } from '../lib/anti-cheat.js'
+import { db } from '../lib/db.js'
+import { puzzles, puzzleSessions, completions, weeklyRankings } from '../../drizzle/schema.js'
 import { eq, and, asc } from 'drizzle-orm'
-import { calculateAdjustedTime } from '../../src/shared/scoring'
+import { calculateAdjustedTime } from '../../src/shared/scoring.js'
 import { sql } from 'drizzle-orm'
 
 function getWeekStart(date: Date): string {

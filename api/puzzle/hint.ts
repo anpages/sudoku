@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
-import { verifySessionToken } from '../lib/anti-cheat'
-import { db } from '../lib/db'
-import { puzzles, puzzleSessions } from '../../drizzle/schema'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
+import { verifySessionToken } from '../lib/anti-cheat.js'
+import { db } from '../lib/db.js'
+import { puzzles, puzzleSessions } from '../../drizzle/schema.js'
 import { and, eq } from 'drizzle-orm'
 
 const MAX_HINTS = 5

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAuth, errorResponse } from '../lib/middleware'
+import { requireAuth, errorResponse } from '../lib/middleware.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const session = await requireAuth(req, res)
