@@ -15,25 +15,14 @@ interface TodayStats {
   weeklyTotal: number
 }
 
-function DiceIcon() {
-  return (
-    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="2" width="20" height="20" rx="4" />
-      <circle cx="8"  cy="8"  r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="8"  r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="8"  cy="16" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
-    </svg>
-  )
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
 }
 
-function ChevronRight() {
-  return (
-    <svg className="w-4 h-4 shrink-0 text-(--color-text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 18l6-6-6-6" />
-    </svg>
-  )
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } },
 }
 
 export function Home() {
@@ -56,185 +45,156 @@ export function Home() {
     navigate(`/juego/${selectedDiff}`)
   }
 
-  function handleRandom() {
-    const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
-    navigate(`/juego/${key}`)
+  function handleContinue() {
+    if (savedIsDaily) navigate('/diario')
+    else navigate(`/juego/${savedDifficulty}`, { state: { resume: true } })
   }
 
   const continueLabel = savedIsDaily
     ? 'Continuar reto diario'
-    : `Continuar partida · ${DIFFICULTY_CONFIG[savedDifficulty!]?.label ?? ''}`
-
-  // ── Sub-componentes ─────────────────────────────────────────
-
-  const heroBlock = (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="flex flex-col gap-3"
-    >
-      <div>
-        <h1 className="text-5xl font-black tracking-tight text-(--color-text) leading-none">Sudoku</h1>
-        <p className="text-(--color-text-muted) mt-2">El clásico juego de lógica. Sin distracciones.</p>
-      </div>
-
-      {hasSavedGame && (
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={() => {
-            if (savedIsDaily) navigate('/diario')
-            else navigate(`/juego/${savedDifficulty}`, { state: { resume: true } })
-          }}
-          className="flex items-center justify-center gap-2.5 py-4 rounded-2xl bg-(--color-primary) text-white text-base font-bold shadow-lg hover:opacity-90 transition-opacity"
-        >
-          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
-          </svg>
-          {continueLabel}
-        </motion.button>
-      )}
-
-      {/* Difficulty selector + play */}
-      <div className="flex gap-2">
-        <select
-          value={selectedDiff}
-          onChange={(e) => setSelectedDiff(e.target.value as Difficulty)}
-          className="flex-1 py-3.5 px-4 rounded-xl border border-(--color-border) bg-(--color-surface) text-(--color-text) text-sm font-semibold appearance-none cursor-pointer focus:outline-none focus:border-(--color-primary)"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right 12px center',
-          }}
-        >
-          {DIFFICULTY_KEYS.map((key) => (
-            <option key={key} value={key}>{DIFFICULTY_CONFIG[key].label}</option>
-          ))}
-        </select>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handlePlay}
-          className={[
-            'px-6 py-3.5 rounded-xl text-base font-bold transition-opacity hover:opacity-90',
-            hasSavedGame
-              ? 'border border-(--color-border) bg-(--color-surface) text-(--color-text)'
-              : 'bg-(--color-primary) text-white shadow-lg',
-          ].join(' ')}
-        >
-          Jugar
-        </motion.button>
-      </div>
-
-      <motion.button
-        whileTap={{ scale: 0.97 }}
-        onClick={handleRandom}
-        className="flex items-center justify-center gap-2.5 py-3 rounded-xl border border-(--color-border) bg-(--color-surface) text-(--color-text) text-sm font-semibold hover:bg-(--color-surface-alt) transition-colors"
-      >
-        <DiceIcon />
-        Partida rápida
-      </motion.button>
-    </motion.div>
-  )
-
-  const statsBlock = stats && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.15, duration: 0.3 }}
-      className="grid grid-cols-2 gap-3"
-    >
-      <div className="flex items-center gap-3 p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
-        <span className="text-2xl">🎮</span>
-        <div>
-          <p className="text-lg font-bold text-(--color-text)">{stats.gamesToday}</p>
-          <p className="text-xs text-(--color-text-muted)">Partidas hoy</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3 p-4 rounded-xl border border-(--color-border) bg-(--color-surface)">
-        <span className="text-2xl">🏆</span>
-        <div>
-          <p className="text-lg font-bold text-(--color-text)">
-            {stats.weeklyRank ? `#${stats.weeklyRank}` : '—'}
-          </p>
-          <p className="text-xs text-(--color-text-muted)">Ranking semanal</p>
-        </div>
-      </div>
-    </motion.div>
-  )
-
-  const secondaryBlock = (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.25, duration: 0.3 }}
-      className="flex flex-col gap-2"
-    >
-      <button
-        onClick={() => navigate('/diario')}
-        className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors text-left group"
-      >
-        <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center shrink-0">
-          <svg className="w-5 h-5 text-(--color-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8"  y1="2" x2="8"  y2="6" />
-            <line x1="3"  y1="10" x2="21" y2="10" />
-          </svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-(--color-text) text-sm">Sudoku del día</p>
-          <p className="text-xs text-(--color-text-muted)">Compite con todos los jugadores</p>
-        </div>
-        <ChevronRight />
-      </button>
-
-      <button
-        onClick={() => navigate('/ranking')}
-        className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors text-left group"
-      >
-        <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950 flex items-center justify-center shrink-0">
-          <svg className="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <polyline points="18 20 18 10" />
-            <polyline points="12 20 12 4"  />
-            <polyline points="6  20 6  14"  />
-          </svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-(--color-text) text-sm">Rankings</p>
-          <p className="text-xs text-(--color-text-muted)">Clasificación semanal</p>
-        </div>
-        <ChevronRight />
-      </button>
-    </motion.div>
-  )
+    : `Continuar · ${DIFFICULTY_CONFIG[savedDifficulty!]?.label ?? ''}`
 
   return (
     <div className="flex flex-col min-h-screen bg-(--color-surface)">
       <Header />
 
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-10">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 lg:py-0">
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="w-full max-w-sm flex flex-col items-center gap-8"
+        >
+          {/* Hero */}
+          <motion.div variants={fadeUp} className="text-center">
+            <h1 className="text-6xl font-extrabold tracking-tight text-(--color-text) leading-none">
+              Sudoku
+            </h1>
+            <p className="text-(--color-text-muted) mt-3 text-base font-light tracking-wide">
+              Concentración pura. Sin distracciones.
+            </p>
+          </motion.div>
 
-        {/* ── Mobile: columna única ── */}
-        <div className="flex flex-col gap-6 lg:hidden max-w-md mx-auto">
-          {heroBlock}
-          {statsBlock}
-          {secondaryBlock}
-        </div>
+          {/* Continue game */}
+          {hasSavedGame && (
+            <motion.button
+              variants={fadeUp}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleContinue}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-(--color-primary) text-white text-base font-semibold shadow-lg shadow-(--color-primary)/20 hover:shadow-xl hover:shadow-(--color-primary)/30 transition-shadow"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="6 3 20 12 6 21" />
+              </svg>
+              {continueLabel}
+            </motion.button>
+          )}
 
-        {/* ── Desktop: dos columnas ── */}
-        <div className="hidden lg:grid grid-cols-[340px_1fr] gap-16 items-start">
-          {/* Columna izquierda: hero + CTA */}
-          <div className="flex flex-col gap-6 sticky top-24">
-            {heroBlock}
-          </div>
+          {/* New game */}
+          <motion.div variants={fadeUp} className="w-full flex flex-col gap-3">
+            {/* Difficulty pills */}
+            <div className="grid grid-cols-3 gap-2">
+              {DIFFICULTY_KEYS.map((key) => {
+                const cfg = DIFFICULTY_CONFIG[key]
+                const active = selectedDiff === key
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedDiff(key)}
+                    className={[
+                      'relative py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
+                      active
+                        ? 'text-white shadow-md'
+                        : 'text-(--color-text-muted) bg-(--color-surface-alt) hover:bg-(--color-surface-raised)',
+                    ].join(' ')}
+                    style={active ? { backgroundColor: cfg.color, boxShadow: `0 4px 14px ${cfg.color}33` } : undefined}
+                  >
+                    {cfg.label}
+                  </button>
+                )
+              })}
+            </div>
 
-          {/* Columna derecha: stats + acciones secundarias */}
-          <div className="flex flex-col gap-6">
-            {statsBlock}
-            {secondaryBlock}
-          </div>
-        </div>
+            {/* Play button */}
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handlePlay}
+              className={[
+                'w-full py-4 rounded-2xl text-base font-semibold transition-all duration-200',
+                hasSavedGame
+                  ? 'border border-(--color-border) text-(--color-text) hover:bg-(--color-surface-alt)'
+                  : 'bg-(--color-primary) text-white shadow-lg shadow-(--color-primary)/20 hover:shadow-xl hover:shadow-(--color-primary)/30',
+              ].join(' ')}
+            >
+              Jugar
+            </motion.button>
+          </motion.div>
 
+          {/* Quick actions */}
+          <motion.div variants={fadeUp} className="w-full grid grid-cols-2 gap-3">
+            <button
+              onClick={() => navigate('/diario')}
+              className="flex flex-col items-center gap-2 py-5 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-(--color-surface-alt) group-hover:bg-(--color-surface-raised) flex items-center justify-center transition-colors">
+                <svg className="w-5 h-5 text-(--color-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <text x="12" y="17" textAnchor="middle" fontSize="7" fill="currentColor" stroke="none" fontWeight="700">
+                    {new Date().getDate()}
+                  </text>
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-(--color-text)">Reto diario</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/ranking')}
+              className="flex flex-col items-center gap-2 py-5 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-(--color-surface-alt) group-hover:bg-(--color-surface-raised) flex items-center justify-center transition-colors">
+                <svg className="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                  <polyline points="18 20 18 10" />
+                  <polyline points="12 20 12 4" />
+                  <polyline points="6 20 6 14" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-(--color-text)">Rankings</span>
+            </button>
+          </motion.div>
+
+          {/* Stats */}
+          {stats && (
+            <motion.div variants={fadeUp} className="w-full flex gap-3">
+              <div className="flex-1 text-center py-4 rounded-2xl bg-(--color-surface-alt)">
+                <p className="text-2xl font-bold text-(--color-text) tabular-nums">{stats.gamesToday}</p>
+                <p className="text-xs text-(--color-text-muted) mt-0.5 font-medium">Partidas hoy</p>
+              </div>
+              <div className="flex-1 text-center py-4 rounded-2xl bg-(--color-surface-alt)">
+                <p className="text-2xl font-bold text-(--color-text) tabular-nums">
+                  {stats.weeklyRank ? `#${stats.weeklyRank}` : '—'}
+                </p>
+                <p className="text-xs text-(--color-text-muted) mt-0.5 font-medium">Ranking semanal</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Random game — subtle link */}
+          <motion.button
+            variants={fadeUp}
+            onClick={() => {
+              const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
+              navigate(`/juego/${key}`)
+            }}
+            className="text-sm text-(--color-text-muted) hover:text-(--color-primary) transition-colors font-medium"
+          >
+            Partida aleatoria
+          </motion.button>
+        </motion.div>
       </main>
     </div>
   )
