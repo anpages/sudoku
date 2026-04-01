@@ -18,9 +18,12 @@ interface Props {
   puzzleId: string
   sessionToken: string
   difficulty: Difficulty
+  isDaily?: boolean
+  dailyDate?: string
+  onPlayAgain: () => void
 }
 
-export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props) {
+export function GameScreen({ givens, puzzleId, sessionToken, difficulty, isDaily = false, dailyDate, onPlayAgain }: Props) {
   const navigate = useNavigate()
   const initGame = useGameStore((s) => s.initGame)
   const status = useGameStore((s) => s.status)
@@ -86,6 +89,10 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
     startTimer(sessionToken)
   }
 
+  const dailyLabel = dailyDate
+    ? new Date(dailyDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+    : new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+
   const config = DIFFICULTY_CONFIG[difficulty]
   const boardMaxW = 'max-w-[min(90vw,calc(90vh-280px),480px)] lg:max-w-[min(calc(100vh-200px),560px)]'
 
@@ -95,9 +102,22 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
       {/* Board column */}
       <div className={`flex flex-col items-stretch gap-3 w-full ${boardMaxW}`}>
         <div className="flex items-center justify-between w-full">
-          <span className="text-sm font-semibold" style={{ color: config.color }}>
-            {config.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold" style={{ color: config.color }}>
+              {config.label}
+            </span>
+            {isDaily && (
+              <span className="flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 rounded-full bg-(--color-primary)/10 text-(--color-primary)">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                {dailyLabel}
+              </span>
+            )}
+          </div>
           <div className="text-xl font-mono font-bold text-(--color-text) tabular-nums">
             {formatTime(elapsed)}
           </div>
@@ -128,7 +148,8 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty }: Props
           errorsMade={errors}
           adjustedTime={calculateAdjustedTime(elapsed, hintsUsed, errors)}
           rank={null}
-          onPlayAgain={() => handleRestart()}
+          isDaily={isDaily}
+          onPlayAgain={onPlayAgain}
           onHome={() => navigate('/')}
         />
       )}

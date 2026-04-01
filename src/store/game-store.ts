@@ -219,8 +219,8 @@ export const useGameStore = create<GameStore>()(
     if (status !== 'playing' || locked || selected === null) return
     const cell = cells[selected]
     if (cell.isGiven) return
-    // Block erase if this digit is complete (all 9 placed)
-    if (cell.value !== null && cells.filter((c) => c.value === cell.value).length >= 9) return
+    // Block erase if this digit is complete (all 9 placed) — but allow erasing errors
+    if (cell.value !== null && !cell.isError && cells.filter((c) => c.value === cell.value).length >= 9) return
 
     const cleared = cells.map((c, i) =>
       i === selected ? { ...c, value: null, pencilMarks: [], isError: false } : c,

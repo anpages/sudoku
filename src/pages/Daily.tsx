@@ -4,6 +4,7 @@ import { GameScreen } from '@/components/game/GameScreen'
 import { Header } from '@/components/layout/Header'
 import { api } from '@/lib/api'
 import { useGameStore } from '@/store/game-store'
+import { useTimerStore } from '@/store/timer-store'
 import type { DailyPuzzle } from '@/shared/types'
 
 export function Daily() {
@@ -47,17 +48,10 @@ export function Daily() {
     )
   }
 
-  // daily.puzzleId is used as puzzleId for session creation on the server
-  // The GameScreen requests a session via generate endpoint with type=daily
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="flex-1 flex flex-col justify-center py-4">
-        <div className="text-center mb-4">
-          <span className="text-xs font-semibold text-(--color-text-muted) uppercase tracking-widest">
-            Sudoku del día · {new Date(daily.date).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </span>
-        </div>
+      <div className="flex-1 flex flex-col">
         <DailyGameLoader daily={daily} />
       </div>
     </div>
@@ -67,16 +61,25 @@ export function Daily() {
 function DailyGameLoader({ daily }: { daily: DailyPuzzle }) {
   const [session, setSession] = useState<{ sessionToken: string } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sessionKey, setSessionKey] = useState(0)
   const navigate = useNavigate()
 
+  function handlePlayAgain() {
+    useGameStore.getState().reset()
+    useTimerStore.getState().reset()
+    setSessionKey((k) => k + 1)
+  }
+
   useEffect(() => {
+    setLoading(true)
+    setSession(null)
     api.post<{ sessionToken: string }>('/api/puzzle/daily-session', {
       dailyPuzzleId: daily.id,
     })
       .then(setSession)
       .catch(() => navigate('/'))
       .finally(() => setLoading(false))
-  }, [daily.id, navigate])
+  }, [daily.id, navigate, sessionKey])
 
   if (loading) {
     return (
@@ -94,16 +97,27 @@ function DailyGameLoader({ daily }: { daily: DailyPuzzle }) {
       puzzleId={daily.puzzleId}
       sessionToken={session.sessionToken}
       difficulty={daily.difficulty}
+      date={daily.date}
+      onPlayAgain={handlePlayAgain}
     />
   )
 }
 
 /** Wraps GameScreen and marks the game as daily in the store */
-function DailyGameScreen(props: { givens: string; puzzleId: string; sessionToken: string; difficulty: import('@/shared/types').Difficulty }) {
+function DailyGameScreen(props: {
+  givens: string
+  puzzleId: string
+  sessionToken: string
+  difficulty: import('@/shared/types').Difficulty
+  date: string
+  onPlayAgain: () => void
+}) {
+  const { date, onPlayAgain, ...gameProps } = props
+
   useEffect(() => {
     // Mark as daily after GameScreen's initGame runs
     useGameStore.setState({ isDaily: true })
   }, [])
 
-  return <GameScreen {...props} />
+  return <GameScreen {...gameProps} isDaily dailyDate={date} onPlayAgain={onPlayAgain} />
 }

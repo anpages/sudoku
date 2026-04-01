@@ -10,6 +10,7 @@ interface Props {
   errorsMade: number
   adjustedTime: number
   rank: number | null
+  isDaily?: boolean
   onPlayAgain: () => void
   onHome: () => void
 }
@@ -21,6 +22,7 @@ export function CompletionModal({
   errorsMade,
   adjustedTime,
   rank,
+  isDaily = false,
   onPlayAgain,
   onHome,
 }: Props) {
@@ -85,7 +87,7 @@ export function CompletionModal({
             onClick={onPlayAgain}
             className="flex-1 py-3 rounded-xl bg-(--color-primary) text-white font-semibold hover:bg-(--color-primary-dark) transition-colors"
           >
-            Jugar otra
+            {isDaily ? 'Repetir' : 'Jugar otra'}
           </button>
         </div>
       </motion.div>

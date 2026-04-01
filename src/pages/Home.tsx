@@ -123,7 +123,7 @@ export function Home() {
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
-                navigate(`/juego/${key}`)
+                navigate(`/juego/${key}`, { state: { random: true } })
               }}
               className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-(--color-primary) text-white text-base font-semibold shadow-lg shadow-(--color-primary)/20 hover:shadow-xl hover:shadow-(--color-primary)/30 transition-shadow"
             >

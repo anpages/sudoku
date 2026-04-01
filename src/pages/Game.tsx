@@ -9,6 +9,8 @@ import { useTimerStore } from '@/store/timer-store'
 import type { Difficulty, PuzzleSession } from '@/shared/types'
 import { DIFFICULTY_CONFIG } from '@/shared/constants'
 
+const DIFFICULTY_KEYS = Object.keys(DIFFICULTY_CONFIG) as Difficulty[]
+
 export function Game() {
   const { difficulty } = useParams<{ difficulty: Difficulty }>()
   const navigate = useNavigate()
@@ -19,6 +21,17 @@ export function Game() {
 
   const diff = difficulty as Difficulty
   const wantsResume = !!(location.state as { resume?: boolean } | null)?.resume
+  const isRandom = !!(location.state as { random?: boolean } | null)?.random
+  const [gameKey, setGameKey] = useState(0)
+
+  function handlePlayAgain() {
+    if (isRandom) {
+      const key = DIFFICULTY_KEYS[Math.floor(Math.random() * DIFFICULTY_KEYS.length)]
+      navigate(`/juego/${key}`, { state: { random: true } })
+    } else {
+      setGameKey((k) => k + 1)
+    }
+  }
 
   useEffect(() => {
     if (!diff || !DIFFICULTY_CONFIG[diff]) {
@@ -63,7 +76,7 @@ export function Game() {
       }
     }
     loadPuzzle()
-  }, [diff, navigate, wantsResume])
+  }, [diff, navigate, wantsResume, gameKey])
 
   if (loading) {
     return (
@@ -108,6 +121,7 @@ export function Game() {
             puzzleId={session.puzzleId}
             sessionToken={session.sessionToken}
             difficulty={diff}
+            onPlayAgain={handlePlayAgain}
           />
         </ErrorBoundary>
       </div>
