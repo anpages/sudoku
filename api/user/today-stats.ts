@@ -36,17 +36,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Weekly ranking position
   const weekStart = getWeekStart()
   const allWeekly = await db
-    .select({ userId: weeklyRankings.userId })
+    .select({ userId: weeklyRankings.userId, gamesPlayed: weeklyRankings.gamesPlayed })
     .from(weeklyRankings)
     .where(eq(weeklyRankings.weekStart, weekStart))
     .orderBy(asc(weeklyRankings.totalAdjustedTime))
 
-  const weeklyRank = allWeekly.findIndex((r) => r.userId === userId) + 1 // 0 if not found
+  const weeklyIdx = allWeekly.findIndex((r) => r.userId === userId)
+  const weeklyRank = weeklyIdx === -1 ? null : weeklyIdx + 1
+  const weeklyGames = weeklyIdx === -1 ? 0 : allWeekly[weeklyIdx].gamesPlayed
 
   res.setHeader('Cache-Control', 'private, max-age=30')
   res.status(200).json({
     gamesToday: todayCount?.count ?? 0,
-    weeklyRank: weeklyRank || null, // null if not ranked
+    weeklyRank,
+    weeklyGames,
     weeklyTotal: allWeekly.length,
   })
 }

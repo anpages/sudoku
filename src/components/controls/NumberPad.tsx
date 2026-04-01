@@ -25,11 +25,6 @@ function DigitButton({ digit, disabled }: { digit: number; disabled: boolean }) 
       ].join(' ')}
     >
       <span className="text-xl lg:text-3xl font-semibold leading-none">{digit}</span>
-      {!complete && (
-        <span className="text-[10px] lg:text-xs text-(--color-text-muted) font-normal mt-0.5 lg:mt-1 leading-none">
-          {remaining}
-        </span>
-      )}
     </motion.button>
   )
 }

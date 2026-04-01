@@ -149,6 +149,10 @@ export const useGameStore = create<GameStore>()(
     const cell = cells[selected]
     if (cell.isGiven) return
 
+    // Block if digit is already complete (9 instances on board)
+    const digitCount = cells.filter((c) => c.value === digit).length
+    if (digitCount >= 9) return
+
     if (pencilMode) {
       get().togglePencilMark(digit)
       return
@@ -215,6 +219,8 @@ export const useGameStore = create<GameStore>()(
     if (status !== 'playing' || locked || selected === null) return
     const cell = cells[selected]
     if (cell.isGiven) return
+    // Block erase if this digit is complete (all 9 placed)
+    if (cell.value !== null && cells.filter((c) => c.value === cell.value).length >= 9) return
 
     const cleared = cells.map((c, i) =>
       i === selected ? { ...c, value: null, pencilMarks: [], isError: false } : c,

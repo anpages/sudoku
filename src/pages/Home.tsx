@@ -12,6 +12,7 @@ const DIFFICULTY_KEYS = Object.keys(DIFFICULTY_CONFIG) as Difficulty[]
 interface TodayStats {
   gamesToday: number
   weeklyRank: number | null
+  weeklyGames: number
   weeklyTotal: number
 }
 
@@ -65,12 +66,35 @@ export function Home() {
           animate="show"
           className="w-full max-w-sm flex flex-col items-center gap-5"
         >
+          {/* Stats — top, prominent */}
+          {stats && (
+            <motion.div variants={fadeUp} className="w-full grid grid-cols-3 gap-2">
+              <div className="relative py-4 rounded-2xl bg-(--color-primary)/8 text-center overflow-hidden">
+                <p className="text-3xl font-extrabold text-(--color-primary) tabular-nums">{stats.gamesToday}</p>
+                <p className="text-[11px] text-(--color-text-muted) mt-1 font-medium">Hoy</p>
+              </div>
+              <div className="relative py-4 rounded-2xl bg-amber-500/8 text-center overflow-hidden">
+                <p className="text-3xl font-extrabold text-amber-500 tabular-nums">{stats.weeklyGames}</p>
+                <p className="text-[11px] text-(--color-text-muted) mt-1 font-medium">Esta semana</p>
+              </div>
+              <button
+                onClick={() => navigate('/ranking')}
+                className="relative py-4 rounded-2xl bg-emerald-500/8 text-center overflow-hidden hover:bg-emerald-500/12 transition-colors"
+              >
+                <p className="text-3xl font-extrabold text-emerald-500 tabular-nums">
+                  {stats.weeklyRank ? `#${stats.weeklyRank}` : '—'}
+                </p>
+                <p className="text-[11px] text-(--color-text-muted) mt-1 font-medium">Ranking</p>
+              </button>
+            </motion.div>
+          )}
+
           {/* Hero */}
           <motion.div variants={fadeUp} className="text-center">
-            <h1 className="text-6xl font-extrabold tracking-tight text-(--color-text) leading-none">
+            <h1 className="text-5xl font-extrabold tracking-tight text-(--color-text) leading-none">
               Sudoku
             </h1>
-            <p className="text-(--color-text-muted) mt-3 text-base font-light tracking-wide">
+            <p className="text-(--color-text-muted) mt-2 text-sm font-light tracking-wide">
               Concentración pura. Sin distracciones.
             </p>
           </motion.div>
@@ -107,8 +131,30 @@ export function Home() {
             </motion.button>
           )}
 
+          {/* Daily challenge */}
+          <motion.button
+            variants={fadeUp}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/diario')}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors"
+          >
+            <div className="w-9 h-9 rounded-xl bg-(--color-primary)/10 flex items-center justify-center shrink-0">
+              <svg className="w-[18px] h-[18px] text-(--color-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-(--color-text)">Reto diario</p>
+              <p className="text-[11px] text-(--color-text-muted)">Compite con todos los jugadores</p>
+            </div>
+            <svg className="w-4 h-4 text-(--color-text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M9 18l6-6-6-6" /></svg>
+          </motion.button>
+
           {/* Choose difficulty — compact inline */}
-          <motion.div variants={fadeUp} className="w-full flex items-center gap-2">
+          <motion.div variants={fadeUp} className="w-full flex items-center gap-2 px-1">
             <div className="flex-1 flex gap-1 overflow-x-auto">
               {DIFFICULTY_KEYS.map((key) => {
                 const cfg = DIFFICULTY_CONFIG[key]
@@ -138,57 +184,6 @@ export function Home() {
               Jugar →
             </motion.button>
           </motion.div>
-
-          {/* Quick actions */}
-          <motion.div variants={fadeUp} className="w-full grid grid-cols-2 gap-3">
-            <button
-              onClick={() => navigate('/diario')}
-              className="flex flex-col items-center gap-2 py-4 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-(--color-surface-alt) group-hover:bg-(--color-surface-raised) flex items-center justify-center transition-colors">
-                <svg className="w-5 h-5 text-(--color-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                  <text x="12" y="17" textAnchor="middle" fontSize="7" fill="currentColor" stroke="none" fontWeight="700">
-                    {new Date().getDate()}
-                  </text>
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-(--color-text)">Reto diario</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/ranking')}
-              className="flex flex-col items-center gap-2 py-4 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors group"
-            >
-              <div className="w-10 h-10 rounded-xl bg-(--color-surface-alt) group-hover:bg-(--color-surface-raised) flex items-center justify-center transition-colors">
-                <svg className="w-5 h-5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
-                  <polyline points="18 20 18 10" />
-                  <polyline points="12 20 12 4" />
-                  <polyline points="6 20 6 14" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-(--color-text)">Rankings</span>
-            </button>
-          </motion.div>
-
-          {/* Stats */}
-          {stats && (
-            <motion.div variants={fadeUp} className="w-full flex gap-3">
-              <div className="flex-1 text-center py-4 rounded-2xl bg-(--color-surface-alt)">
-                <p className="text-2xl font-bold text-(--color-text) tabular-nums">{stats.gamesToday}</p>
-                <p className="text-xs text-(--color-text-muted) mt-0.5 font-medium">Partidas hoy</p>
-              </div>
-              <div className="flex-1 text-center py-4 rounded-2xl bg-(--color-surface-alt)">
-                <p className="text-2xl font-bold text-(--color-text) tabular-nums">
-                  {stats.weeklyRank ? `#${stats.weeklyRank}` : '—'}
-                </p>
-                <p className="text-xs text-(--color-text-muted) mt-0.5 font-medium">Ranking semanal</p>
-              </div>
-            </motion.div>
-          )}
 
         </motion.div>
       </main>
