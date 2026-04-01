@@ -46,7 +46,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 'No autorizado', 403)
   }
 
-  // Fetch the puzzle session from DB
+  // Fetch the puzzle session from DB (don't filter by status — the session may have
+  // been marked 'abandoned' by generate.ts before this request arrives)
   const [psRow] = await db
     .select()
     .from(puzzleSessions)
@@ -54,12 +55,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       and(
         eq(puzzleSessions.sessionToken, sessionToken),
         eq(puzzleSessions.userId, session.user.id),
-        eq(puzzleSessions.status, 'active'),
       ),
     )
     .limit(1)
 
-  if (!psRow) return errorResponse(res, 'Sesión no encontrada o ya completada', 404)
+  if (!psRow) return errorResponse(res, 'Sesión no encontrada', 404)
+
+  // Already completed — return existing result
+  if (psRow.status === 'completed') {
+    const [existing] = await db
+      .select({ adjustedTime: completions.adjustedTime })
+      .from(completions)
+      .where(and(eq(completions.userId, session.user.id), eq(completions.puzzleId, payload.puzzleId)))
+      .limit(1)
+    const rank = await getDailyRank(psRow.dailyPuzzleId, session.user.id)
+    return res.status(200).json({ adjustedTime: existing?.adjustedTime ?? 0, rank, dailyRank: rank })
+  }
 
   // Validate elapsed time (anti-cheat)
   const { trusted } = validateElapsedTime(elapsedSeconds, payload.startedAt)

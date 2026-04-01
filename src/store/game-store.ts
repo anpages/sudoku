@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CellState, Difficulty } from '@/shared/types'
 import { MAX_ERRORS, FLASH_DURATION_MS } from '@/shared/constants'
+import { useTimerStore } from '@/store/timer-store'
 
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed'
 
@@ -62,18 +63,11 @@ export function isPeer(a: number, b: number) {
   return ar === br || ac === bc || isSameBox(a, b)
 }
 
-/** Collect all cell indices that belong to newly-completed groups (digit×9, row, box). */
+/** Collect cell indices from newly-completed rows or boxes. */
 function getCompletedCells(cells: CellState[], placedIndex: number): number[] {
   const flashSet = new Set<number>()
-  const digit = cells[placedIndex].value
 
-  // 1. All 9 of this digit placed
-  if (digit !== null) {
-    const indices = cells.reduce<number[]>((acc, c, i) => { if (c.value === digit) acc.push(i); return acc }, [])
-    if (indices.length === 9) for (const i of indices) flashSet.add(i)
-  }
-
-  // 2. Row complete
+  // 1. Row complete
   const row = Math.floor(placedIndex / 9)
   const rowStart = row * 9
   const rowCells = Array.from({ length: 9 }, (_, i) => rowStart + i)
@@ -188,15 +182,11 @@ export const useGameStore = create<GameStore>()(
       }
     }
 
-    // Check for completed groups (digit×9, row, box)
+    // Flash completed row or box (NOT digit — too noisy)
     const completed = getCompletedCells(withConflicts, selected)
     if (completed.length > 0) {
-      set({ flashingCells: completed, locked: true })
-      setTimeout(() => {
-        // Only unlock if still playing — don't unlock after completion/failure
-        const s = get().status
-        set({ flashingCells: null, locked: s !== 'playing' })
-      }, FLASH_DURATION_MS)
+      set({ flashingCells: completed })
+      setTimeout(() => set({ flashingCells: null }), FLASH_DURATION_MS)
     }
 
     // Check completion: all filled AND no conflicts anywhere on the board
@@ -263,7 +253,27 @@ export const useGameStore = create<GameStore>()(
     set({ status: paused ? 'paused' : 'playing', locked: paused })
   },
 
-  setComplete: () => set({ status: 'complete', locked: true }),
+  setComplete: () => {
+    set({ status: 'complete', locked: true })
+
+    // Fire-and-forget: save completion in the background
+    const { cells, hintsUsed, errors, sessionToken } = get()
+    const elapsed = useTimerStore.getState().elapsed
+    const board = cells.map((c) => c.value ?? 0).join('')
+
+    fetch('/api/puzzle/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        sessionToken,
+        board,
+        elapsedSeconds: elapsed,
+        hintsUsed,
+        errorsMade: errors,
+      }),
+    }).catch((e) => console.error('[sudoku] save error:', e))
+  },
   setFailed: () => set({ status: 'failed', locked: true }),
 
   reset: () => set({
