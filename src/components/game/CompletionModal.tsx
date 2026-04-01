@@ -13,6 +13,7 @@ interface Props {
   isDaily?: boolean
   onPlayAgain: () => void
   onHome: () => void
+  onViewResults?: () => void
 }
 
 export function CompletionModal({
@@ -25,6 +26,7 @@ export function CompletionModal({
   isDaily = false,
   onPlayAgain,
   onHome,
+  onViewResults,
 }: Props) {
   const config = DIFFICULTY_CONFIG[difficulty]
 
@@ -78,10 +80,10 @@ export function CompletionModal({
 
         <div className="flex gap-3">
           <button
-            onClick={onHome}
+            onClick={isDaily && onViewResults ? onViewResults : onHome}
             className="flex-1 py-3 rounded-xl border-2 border-(--color-border) text-(--color-text) font-semibold hover:bg-(--color-surface-alt) transition-colors"
           >
-            Inicio
+            {isDaily && onViewResults ? 'Ver resultados' : 'Inicio'}
           </button>
           <button
             onClick={onPlayAgain}

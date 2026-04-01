@@ -21,9 +21,10 @@ interface Props {
   isDaily?: boolean
   dailyDate?: string
   onPlayAgain: () => void
+  onViewResults?: () => void
 }
 
-export function GameScreen({ givens, puzzleId, sessionToken, difficulty, isDaily = false, dailyDate, onPlayAgain }: Props) {
+export function GameScreen({ givens, puzzleId, sessionToken, difficulty, isDaily = false, dailyDate, onPlayAgain, onViewResults }: Props) {
   const navigate = useNavigate()
   const initGame = useGameStore((s) => s.initGame)
   const status = useGameStore((s) => s.status)
@@ -151,6 +152,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty, isDaily
           isDaily={isDaily}
           onPlayAgain={onPlayAgain}
           onHome={() => navigate('/')}
+          onViewResults={onViewResults}
         />
       )}
     </div>

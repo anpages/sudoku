@@ -20,7 +20,7 @@ export function DailyCompletionView({ daily, myCompletion, onPlay }: Props) {
   const config = DIFFICULTY_CONFIG[daily.difficulty]
 
   useEffect(() => {
-    api.get<RankingEntry[]>('/api/rankings/daily')
+    api.get<RankingEntry[]>(`/api/rankings/daily?t=${Date.now()}`)
       .then(setRanking)
       .finally(() => setLoading(false))
   }, [])

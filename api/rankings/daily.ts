@@ -38,6 +38,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .limit(100)
 
   const ranked = rows.map((r, i) => ({ ...r, rank: i + 1 }))
-  res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=60')
+  res.setHeader('Cache-Control', 'public, max-age=5, stale-while-revalidate=10')
   res.status(200).json(ranked)
 }

@@ -22,6 +22,16 @@ export function Daily() {
       .finally(() => setLoading(false))
   }, [])
 
+  async function handleViewResults() {
+    // Wait briefly for the fire-and-forget validate to complete, then re-fetch
+    await new Promise<void>((resolve) => setTimeout(resolve, 800))
+    try {
+      const fresh = await api.get<DailyPuzzle>('/api/puzzle/daily')
+      setDaily(fresh)
+    } catch { /* keep current daily */ }
+    setForcePlay(false)
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
@@ -70,13 +80,13 @@ export function Daily() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="flex-1 flex flex-col">
-        <DailyGameLoader daily={daily} />
+        <DailyGameLoader daily={daily} onViewResults={handleViewResults} />
       </div>
     </div>
   )
 }
 
-function DailyGameLoader({ daily }: { daily: DailyPuzzle }) {
+function DailyGameLoader({ daily, onViewResults }: { daily: DailyPuzzle; onViewResults: () => void }) {
   const [session, setSession] = useState<{ sessionToken: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [sessionKey, setSessionKey] = useState(0)
@@ -117,6 +127,7 @@ function DailyGameLoader({ daily }: { daily: DailyPuzzle }) {
       difficulty={daily.difficulty}
       date={daily.date}
       onPlayAgain={handlePlayAgain}
+      onViewResults={onViewResults}
     />
   )
 }
@@ -129,13 +140,14 @@ function DailyGameScreen(props: {
   difficulty: import('@/shared/types').Difficulty
   date: string
   onPlayAgain: () => void
+  onViewResults: () => void
 }) {
-  const { date, onPlayAgain, ...gameProps } = props
+  const { date, onPlayAgain, onViewResults, ...gameProps } = props
 
   useEffect(() => {
     // Mark as daily after GameScreen's initGame runs
     useGameStore.setState({ isDaily: true })
   }, [])
 
-  return <GameScreen {...gameProps} isDaily dailyDate={date} onPlayAgain={onPlayAgain} />
+  return <GameScreen {...gameProps} isDaily dailyDate={date} onPlayAgain={onPlayAgain} onViewResults={onViewResults} />
 }
