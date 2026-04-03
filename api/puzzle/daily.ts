@@ -19,7 +19,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       puzzleId: dailyPuzzles.puzzleId,
       date: dailyPuzzles.date,
       difficulty: dailyPuzzles.difficulty,
-      givens: puzzles.givens,  // safe: no solution
+      givens: puzzles.givens,
+    solution: puzzles.solution,
     })
     .from(dailyPuzzles)
     .innerJoin(puzzles, eq(dailyPuzzles.puzzleId, puzzles.id))
@@ -48,6 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       date: today,
       difficulty,
       givens,
+      solution,
     }
   }
 

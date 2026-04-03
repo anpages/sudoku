@@ -17,6 +17,7 @@ interface Props {
   givens: string
   puzzleId: string
   sessionToken: string
+  solution: string
   difficulty: Difficulty
   isDaily?: boolean
   dailyDate?: string
@@ -24,7 +25,7 @@ interface Props {
   onViewResults?: () => void
 }
 
-export function GameScreen({ givens, puzzleId, sessionToken, difficulty, isDaily = false, dailyDate, onPlayAgain, onViewResults }: Props) {
+export function GameScreen({ givens, puzzleId, sessionToken, solution, difficulty, isDaily = false, dailyDate, onPlayAgain, onViewResults }: Props) {
   const navigate = useNavigate()
   const initGame = useGameStore((s) => s.initGame)
   const status = useGameStore((s) => s.status)
@@ -50,7 +51,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty, isDaily
     if (isRestoring) {
       startTimer(sessionToken, useTimerStore.getState().elapsed)
     } else {
-      initGame({ givens, puzzleId, sessionToken, difficulty })
+      initGame({ givens, puzzleId, sessionToken, solution, difficulty })
       startTimer(sessionToken)
     }
 
@@ -86,7 +87,7 @@ export function GameScreen({ givens, puzzleId, sessionToken, difficulty, isDaily
   function handleRestart() {
     resetGame()
     resetTimer()
-    initGame({ givens, puzzleId, sessionToken, difficulty })
+    initGame({ givens, puzzleId, sessionToken, solution, difficulty })
     startTimer(sessionToken)
   }
 

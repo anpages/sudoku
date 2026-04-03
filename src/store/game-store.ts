@@ -17,6 +17,7 @@ interface GameStore {
   sessionToken: string | null
   difficulty: Difficulty | null
   givens: string | null
+  solution: string | null
   isDaily: boolean
   flashingCells: number[] | null  // indices to flash, null = not flashing
   locked: boolean               // true during flash or when paused
@@ -27,6 +28,7 @@ interface GameStore {
     puzzleId: string
     sessionToken: string
     difficulty: Difficulty
+    solution: string
   }) => void
   selectCell: (index: number) => void
   enterValue: (digit: number) => void
@@ -91,14 +93,16 @@ function getCompletedCells(cells: CellState[], placedIndex: number): number[] {
   return Array.from(flashSet)
 }
 
-/** Recompute isError for every non-given cell based on peer conflicts. */
-function recomputeConflicts(cells: CellState[]): CellState[] {
+/** Recompute isError for every non-given cell.
+ *  With solution: flags any cell whose value doesn't match the solution.
+ *  Without solution (fallback): flags peer conflicts. */
+function recomputeErrors(cells: CellState[], solution: string | null): CellState[] {
   return cells.map((c, i) => {
     if (c.value === null || c.isGiven) return c.isError ? { ...c, isError: false } : c
-    const hasConflict = cells.some(
-      (other, j) => j !== i && isPeer(i, j) && other.value === c.value,
-    )
-    return c.isError !== hasConflict ? { ...c, isError: hasConflict } : c
+    const hasError = solution
+      ? c.value !== parseInt(solution[i], 10)
+      : cells.some((other, j) => j !== i && isPeer(i, j) && other.value === c.value)
+    return c.isError !== hasError ? { ...c, isError: hasError } : c
   })
 }
 
@@ -115,11 +119,12 @@ export const useGameStore = create<GameStore>()(
   sessionToken: null,
   difficulty: null,
   givens: null,
+  solution: null,
   isDaily: false,
   flashingCells: null,
   locked: false,
 
-  initGame: ({ givens, puzzleId, sessionToken, difficulty }) => {
+  initGame: ({ givens, puzzleId, sessionToken, difficulty, solution }) => {
     set({
       cells: parseCells(givens),
       selected: null,
@@ -131,6 +136,7 @@ export const useGameStore = create<GameStore>()(
       sessionToken,
       difficulty,
       givens,
+      solution,
       isDaily: false,
       flashingCells: null,
       locked: false,
@@ -144,7 +150,7 @@ export const useGameStore = create<GameStore>()(
   },
 
   enterValue: (digit) => {
-    const { cells, selected, pencilMode, status, locked, errors } = get()
+    const { cells, selected, pencilMode, status, locked, errors, solution } = get()
     if (status !== 'playing' || locked || selected === null) return
     const cell = cells[selected]
     if (cell.isGiven) return
@@ -172,8 +178,8 @@ export const useGameStore = create<GameStore>()(
       return c
     })
 
-    // Detect conflicts (client shows same-peer duplicates, server validates correctness)
-    const withConflicts = recomputeConflicts(updated)
+    // Validate against solution (immediate error) or fall back to peer-conflict detection
+    const withConflicts = recomputeErrors(updated, solution)
     set({ cells: withConflicts })
 
     // Count new errors (only for the just-placed cell)
@@ -215,7 +221,7 @@ export const useGameStore = create<GameStore>()(
   },
 
   eraseCell: () => {
-    const { cells, selected, status, locked } = get()
+    const { cells, selected, status, locked, solution } = get()
     if (status !== 'playing' || locked || selected === null) return
     const cell = cells[selected]
     if (cell.isGiven) return
@@ -225,11 +231,11 @@ export const useGameStore = create<GameStore>()(
     const cleared = cells.map((c, i) =>
       i === selected ? { ...c, value: null, pencilMarks: [], isError: false } : c,
     )
-    set({ cells: recomputeConflicts(cleared) })
+    set({ cells: recomputeErrors(cleared, solution) })
   },
 
   useHint: (index: number, digit: number) => {
-    const { cells, status, locked, hintsUsed } = get()
+    const { cells, status, locked, hintsUsed, solution } = get()
     if (status !== 'playing' || locked) return
     const cell = cells[index]
     if (!cell || cell.isGiven || cell.value !== null) return
@@ -246,8 +252,8 @@ export const useGameStore = create<GameStore>()(
       }
       return c
     })
-    // Recompute conflicts — placing a hint may resolve previous user errors
-    const withConflicts = recomputeConflicts(updated)
+    // Recompute errors — placing a hint may resolve previous user errors
+    const withConflicts = recomputeErrors(updated, solution)
     set({ cells: withConflicts, hintsUsed: hintsUsed + 1, selected: index })
 
     const allFilled = withConflicts.every((c) => c.value !== null)
@@ -311,6 +317,7 @@ export const useGameStore = create<GameStore>()(
     sessionToken: null,
     difficulty: null,
     givens: null,
+    solution: null,
     isDaily: false,
     flashingCells: null,
     locked: false,
@@ -329,6 +336,7 @@ export const useGameStore = create<GameStore>()(
       sessionToken: state.sessionToken,
       difficulty: state.difficulty,
       givens: state.givens,
+      solution: state.solution,
       isDaily: state.isDaily,
     }),
   }

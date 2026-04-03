@@ -78,11 +78,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     status: 'active',
   })
 
-  // Never return `solution`
   res.status(200).json({
     puzzleId: puzzle.id,
     sessionToken,
     givens,
+    solution,
     difficulty,
     startedAt,
   })

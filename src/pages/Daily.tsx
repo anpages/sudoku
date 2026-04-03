@@ -80,13 +80,13 @@ export function Daily() {
     <div className="flex flex-col min-h-screen">
       <Header />
       <div className="flex-1 flex flex-col">
-        <DailyGameLoader daily={daily} onViewResults={handleViewResults} />
+        <DailyGameLoader daily={daily} solution={daily.solution} onViewResults={handleViewResults} />
       </div>
     </div>
   )
 }
 
-function DailyGameLoader({ daily, onViewResults }: { daily: DailyPuzzle; onViewResults: () => void }) {
+function DailyGameLoader({ daily, solution, onViewResults }: { daily: DailyPuzzle; solution: string; onViewResults: () => void }) {
   const [session, setSession] = useState<{ sessionToken: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [sessionKey, setSessionKey] = useState(0)
@@ -124,6 +124,7 @@ function DailyGameLoader({ daily, onViewResults }: { daily: DailyPuzzle; onViewR
       givens={daily.givens}
       puzzleId={daily.puzzleId}
       sessionToken={session.sessionToken}
+      solution={solution}
       difficulty={daily.difficulty}
       date={daily.date}
       onPlayAgain={handlePlayAgain}
@@ -137,6 +138,7 @@ function DailyGameScreen(props: {
   givens: string
   puzzleId: string
   sessionToken: string
+  solution: string
   difficulty: import('@/shared/types').Difficulty
   date: string
   onPlayAgain: () => void

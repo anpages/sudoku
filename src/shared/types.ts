@@ -10,6 +10,7 @@ export interface PuzzleSession {
   puzzleId: string
   sessionToken: string
   givens: string
+  solution: string
   difficulty: Difficulty
   startedAt: number // timestamp ms
 }
@@ -71,6 +72,7 @@ export interface DailyPuzzle {
   date: string        // YYYY-MM-DD
   difficulty: Difficulty
   givens: string
+  solution: string
   myCompletion: DailyCompletion | null
 }
 

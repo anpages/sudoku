@@ -51,6 +51,7 @@ export function Game() {
           givens: saved.givens,
           puzzleId: saved.puzzleId,
           sessionToken: saved.sessionToken,
+          solution: saved.solution ?? '',
           difficulty: saved.difficulty!,
           startedAt: Date.now(),
         })
@@ -120,6 +121,7 @@ export function Game() {
             givens={session.givens}
             puzzleId={session.puzzleId}
             sessionToken={session.sessionToken}
+            solution={session.solution}
             difficulty={diff}
             onPlayAgain={handlePlayAgain}
           />
