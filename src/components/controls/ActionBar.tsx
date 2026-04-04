@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/game-store'
 import { useTimerStore } from '@/store/timer-store'
+import { MAX_HINTS } from '@/shared/constants'
 
 interface Props {
   onHint: () => void
@@ -11,6 +12,7 @@ interface Props {
 export function ActionBar({ onHint, onRestart }: Props) {
   const pencilMode = useGameStore((s) => s.pencilMode)
   const autoPencilUsed = useGameStore((s) => s.autoPencilUsed)
+  const hintsUsed = useGameStore((s) => s.hintsUsed)
   const status = useGameStore((s) => s.status)
   const locked = useGameStore((s) => s.locked)
   const eraseCell = useGameStore((s) => s.eraseCell)
@@ -19,13 +21,15 @@ export function ActionBar({ onHint, onRestart }: Props) {
   const pauseTimer = useTimerStore((s) => s.pause)
 
   const disabled = status !== 'playing' || locked
+  const hintsLeft = MAX_HINTS - hintsUsed
+  const noHintsLeft = hintsLeft <= 0
 
   function handlePause() {
     setPaused(true)
     pauseTimer()
   }
 
-  const actions: { key: string; active: boolean; title: string; badge?: string | null; icon: React.ReactNode; onClick: () => void }[] = [
+  const actions: { key: string; active: boolean; title: string; badge?: string | null; badgeColor?: string; icon: React.ReactNode; onClick: () => void; forceDisabled?: boolean }[] = [
     {
       key: 'erase',
       active: false,
@@ -54,7 +58,7 @@ export function ActionBar({ onHint, onRestart }: Props) {
     {
       key: 'auto-pencil',
       active: false,
-      title: 'Auto-lápiz (+90s)',
+      title: 'Auto-lápiz (×1.5 penalización en ranking)',
       badge: autoPencilUsed > 0 ? `×${autoPencilUsed}` : null,
       icon: (
         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
@@ -67,7 +71,9 @@ export function ActionBar({ onHint, onRestart }: Props) {
     {
       key: 'hint',
       active: false,
-      title: 'Pista',
+      title: noHintsLeft ? 'Sin pistas' : `Pista (${hintsLeft} restante${hintsLeft !== 1 ? 's' : ''})`,
+      badge: `${hintsLeft}`,
+      badgeColor: noHintsLeft ? 'bg-slate-400' : hintsLeft === 1 ? 'bg-amber-500' : 'bg-blue-500',
       icon: (
         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
           <path d="M9 18h6" />
@@ -75,7 +81,8 @@ export function ActionBar({ onHint, onRestart }: Props) {
           <path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z" />
         </svg>
       ),
-      onClick: onHint,
+      onClick: noHintsLeft ? () => {} : onHint,
+      forceDisabled: noHintsLeft,
     },
     {
       key: 'pause',
@@ -105,31 +112,35 @@ export function ActionBar({ onHint, onRestart }: Props) {
 
   return (
     <div className="flex justify-center gap-1.5 lg:gap-2 w-full">
-      {actions.map(({ key, active, title, icon, onClick, badge }) => (
-        <motion.button
-          key={key}
-          onClick={() => !disabled && onClick()}
-          disabled={disabled}
-          whileTap={!disabled ? { scale: 0.9 } : undefined}
-          className={[
-            'relative flex items-center justify-center rounded-xl transition-colors',
-            'w-11 h-11 lg:w-14 lg:h-14',
-            active
-              ? 'text-(--color-primary) bg-(--color-cell-highlight)'
-              : disabled
-                ? 'text-(--color-text-muted) opacity-30'
-                : 'text-(--color-text-muted) hover:text-(--color-text) hover:bg-(--color-surface-alt)',
-          ].join(' ')}
-          title={title}
-        >
-          {icon}
-          {badge && (
-            <span className="absolute -top-1 -right-1 text-[9px] font-bold leading-none bg-violet-500 text-white rounded-full px-1 py-0.5">
-              {badge}
-            </span>
-          )}
-        </motion.button>
-      ))}
+      {actions.map(({ key, active, title, icon, onClick, badge, badgeColor, forceDisabled }) => {
+        const isDisabled = disabled || forceDisabled
+        return (
+          <div key={key} className="relative">
+            <motion.button
+              onClick={() => !isDisabled && onClick()}
+              disabled={isDisabled}
+              whileTap={!isDisabled ? { scale: 0.9 } : undefined}
+              className={[
+                'flex items-center justify-center rounded-xl transition-colors',
+                'w-11 h-11 lg:w-14 lg:h-14',
+                active
+                  ? 'text-(--color-primary) bg-(--color-cell-highlight)'
+                  : isDisabled
+                    ? 'text-(--color-text-muted) opacity-30'
+                    : 'text-(--color-text-muted) hover:text-(--color-text) hover:bg-(--color-surface-alt)',
+              ].join(' ')}
+              title={title}
+            >
+              {icon}
+            </motion.button>
+            {badge != null && (
+              <span className={`pointer-events-none absolute -top-1 -right-1 text-[9px] font-bold leading-none text-white rounded-full px-1 py-0.5 ${badgeColor ?? 'bg-violet-500'}`}>
+                {badge}
+              </span>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

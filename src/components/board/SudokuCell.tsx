@@ -69,37 +69,29 @@ export function SudokuCell({ index, isFlashing }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0"
             >
-              {cell.pencilMarks.length === 1 ? (
-                // Naked single: show prominently centrado
-                <span className="text-[clamp(13px,3.2vmin,20px)] font-semibold leading-none text-(--color-primary)/70">
-                  {cell.pencilMarks[0]}
-                </span>
-              ) : (
-                // Grid 3×3 normal con marcas válidas/inválidas
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-[1px]">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => {
-                    const has = cell.pencilMarks.includes(n)
-                    const invalid = has && cells.some((c, j) => isPeer(j, index) && c.value === n)
-                    return (
-                      <span
-                        key={n}
-                        className={[
-                          'flex items-center justify-center text-[clamp(7px,1.7vmin,10px)] leading-none transition-opacity',
-                          has
-                            ? invalid
-                              ? 'text-(--color-text-pencil) opacity-25 line-through'
-                              : 'text-(--color-text-pencil)'
-                            : 'opacity-0',
-                        ].join(' ')}
-                      >
-                        {n}
-                      </span>
-                    )
-                  })}
-                </div>
-              )}
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 p-[1px]">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => {
+                  const has = cell.pencilMarks.includes(n)
+                  const invalid = has && cells.some((c, j) => isPeer(j, index) && c.value === n)
+                  return (
+                    <span
+                      key={n}
+                      className={[
+                        'flex items-center justify-center text-[clamp(7px,1.7vmin,10px)] leading-none transition-opacity',
+                        has
+                          ? invalid
+                            ? 'text-(--color-text-pencil) opacity-25 line-through'
+                            : 'text-(--color-text-pencil)'
+                          : 'opacity-0',
+                      ].join(' ')}
+                    >
+                      {n}
+                    </span>
+                  )
+                })}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

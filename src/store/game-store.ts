@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CellState, Difficulty } from '@/shared/types'
-import { MAX_ERRORS, FLASH_DURATION_MS } from '@/shared/constants'
+import { MAX_ERRORS, MAX_HINTS, FLASH_DURATION_MS } from '@/shared/constants'
 import { useTimerStore } from '@/store/timer-store'
 
 export type GameStatus = 'idle' | 'playing' | 'paused' | 'complete' | 'failed'
@@ -241,6 +241,7 @@ export const useGameStore = create<GameStore>()(
   useHint: (index: number, digit: number) => {
     const { cells, status, locked, hintsUsed, solution } = get()
     if (status !== 'playing' || locked) return
+    if (hintsUsed >= MAX_HINTS) return
     const cell = cells[index]
     if (!cell || cell.isGiven || cell.value !== null) return
 

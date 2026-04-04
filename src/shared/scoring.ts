@@ -1,11 +1,14 @@
-import { HINT_TIME_PENALTY, ERROR_TIME_PENALTY } from './constants'
+import { HINT_RANK_MULTIPLIER, AUTO_PENCIL_RANK_MULTIPLIER } from './constants'
 
 export function calculateAdjustedTime(
   elapsedSeconds: number,
   hintsUsed: number,
-  errorsMade: number,
+  autoPencilUsed: number,
 ): number {
-  return elapsedSeconds + hintsUsed * HINT_TIME_PENALTY + errorsMade * ERROR_TIME_PENALTY
+  const mult =
+    Math.pow(HINT_RANK_MULTIPLIER, hintsUsed) *
+    Math.pow(AUTO_PENCIL_RANK_MULTIPLIER, autoPencilUsed)
+  return Math.round(elapsedSeconds * mult)
 }
 
 export function formatTime(totalSeconds: number): string {

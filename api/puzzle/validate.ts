@@ -5,11 +5,12 @@ import { db } from '../lib/db.js'
 import { puzzles, puzzleSessions, completions, weeklyRankings } from '../../drizzle/schema.js'
 import { eq, and, asc, sql } from 'drizzle-orm'
 
-const HINT_PENALTY = 30
-const ERROR_PENALTY = 15
-const AUTO_PENCIL_PENALTY = 90
-function calculateAdjustedTime(elapsed: number, hints: number, errors: number, autoPencil: number) {
-  return elapsed + hints * HINT_PENALTY + errors * ERROR_PENALTY + autoPencil * AUTO_PENCIL_PENALTY
+const HINT_MULTIPLIER = 1.20       // ×1.20 per hint used
+const AUTO_PENCIL_MULTIPLIER = 1.50  // ×1.50 per auto-pencil use
+
+function calculateAdjustedTime(elapsed: number, hints: number, autoPencil: number): number {
+  const mult = Math.pow(HINT_MULTIPLIER, hints) * Math.pow(AUTO_PENCIL_MULTIPLIER, autoPencil)
+  return Math.round(elapsed * mult)
 }
 
 function getWeekStart(date: Date): string {
@@ -104,10 +105,10 @@ async function handleValidate(req: VercelRequest, res: VercelResponse) {
     return errorResponse(res, 'Tablero incorrecto', 422)
   }
 
-  const hints = Math.max(0, Math.min(81, hintsUsed ?? 0))
+  const hints = Math.max(0, Math.min(3, hintsUsed ?? 0))
   const errors = Math.max(0, Math.min(3, errorsMade ?? 0))
   const autoPencil = Math.max(0, Math.min(20, autoPencilUsed ?? 0))
-  const adjustedTime = calculateAdjustedTime(trusted, hints, errors, autoPencil)
+  const adjustedTime = calculateAdjustedTime(trusted, hints, autoPencil)
 
   // Mark session as completed
   await db

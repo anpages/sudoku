@@ -1,9 +1,11 @@
 import type { Difficulty } from './types'
 
 export const MAX_ERRORS = 3
+export const MAX_HINTS = 3
 
-export const HINT_TIME_PENALTY = 30   // seconds added per hint
-export const ERROR_TIME_PENALTY = 15  // seconds added per error
+// Multiplicative ranking penalties (applied to elapsed seconds)
+export const HINT_RANK_MULTIPLIER = 1.20      // ×1.20 per hint used
+export const AUTO_PENCIL_RANK_MULTIPLIER = 1.50  // ×1.50 per auto-pencil use
 
 export const DIFFICULTY_CONFIG: Record<Difficulty, {
   label: string
