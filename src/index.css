@@ -29,7 +29,7 @@
   --color-text-given: #2c3e50;
   --color-text-input: #325aaf;
   --color-text-error: #c0392b;
-  --color-text-pencil: #95a5b5;
+  --color-text-pencil: #4a6fa5;
 
   /* Typography */
   --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
@@ -59,7 +59,7 @@
   --color-text-given: #d8e4f0;
   --color-text-input: #82aaf5;
   --color-text-error: #e88080;
-  --color-text-pencil: #6a7a8a;
+  --color-text-pencil: #7aaae0;
 }
 
 @keyframes flash {

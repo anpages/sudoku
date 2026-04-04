@@ -79,7 +79,7 @@ export function SudokuCell({ index, isFlashing }: Props) {
                     <span
                       key={n}
                       className={[
-                        'flex items-center justify-center text-[clamp(7px,1.7vmin,10px)] leading-none transition-opacity',
+                        'flex items-center justify-center text-[clamp(8px,2vmin,12px)] font-semibold leading-none transition-opacity',
                         has
                           ? invalid
                             ? 'text-(--color-text-pencil) opacity-25 line-through'
