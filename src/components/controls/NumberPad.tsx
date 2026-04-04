@@ -16,7 +16,7 @@ function DigitButton({ digit, disabled }: { digit: number; disabled: boolean }) 
       className={[
         'relative flex flex-col items-center justify-center',
         'rounded-xl transition-all duration-100',
-        'py-4 lg:py-5',
+        'py-4 lg:py-7',
         complete
           ? 'opacity-15 cursor-not-allowed bg-(--color-surface-alt) text-(--color-text)'
           : disabled
@@ -24,7 +24,7 @@ function DigitButton({ digit, disabled }: { digit: number; disabled: boolean }) 
             : 'bg-(--color-surface-alt) hover:bg-(--color-cell-selected) active:bg-(--color-cell-selected) cursor-pointer text-(--color-primary)',
       ].join(' ')}
     >
-      <span className="text-2xl lg:text-3xl font-semibold leading-none">{digit}</span>
+      <span className="text-2xl lg:text-4xl font-semibold leading-none">{digit}</span>
     </motion.button>
   )
 }

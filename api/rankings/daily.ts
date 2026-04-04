@@ -28,6 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       elapsedSeconds: completions.elapsedSeconds,
       hintsUsed: completions.hintsUsed,
       errorsMade: completions.errorsMade,
+      autoPencilUsed: completions.autoPencilUsed,
       completedAt: completions.completedAt,
     })
     .from(completions)

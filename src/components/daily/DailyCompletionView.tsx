@@ -132,6 +132,9 @@ export function DailyCompletionView({ daily, myCompletion, onPlay }: Props) {
                     {entry.hintsUsed > 0 && (
                       <span className="text-xs text-amber-500 font-semibold">💡{entry.hintsUsed}</span>
                     )}
+                    {entry.autoPencilUsed > 0 && (
+                      <span className="text-xs text-violet-500 font-semibold">✏️{entry.autoPencilUsed}</span>
+                    )}
                     <span className="font-mono text-sm font-semibold text-(--color-primary)">
                       {formatTime(entry.elapsedSeconds)}
                     </span>

@@ -12,6 +12,7 @@ interface GameStore {
   pencilMode: boolean
   errors: number
   hintsUsed: number
+  autoPencilUsed: number
   status: GameStatus
   puzzleId: string | null
   sessionToken: string | null
@@ -35,6 +36,7 @@ interface GameStore {
   togglePencilMark: (digit: number) => void
   eraseCell: () => void
   useHint: (index: number, digit: number) => void
+  applyAutoPencil: () => void
   setPaused: (paused: boolean) => void
   setComplete: () => void
   setFailed: () => void
@@ -114,6 +116,7 @@ export const useGameStore = create<GameStore>()(
   pencilMode: false,
   errors: 0,
   hintsUsed: 0,
+  autoPencilUsed: 0,
   status: 'idle',
   puzzleId: null,
   sessionToken: null,
@@ -131,6 +134,7 @@ export const useGameStore = create<GameStore>()(
       pencilMode: false,
       errors: 0,
       hintsUsed: 0,
+      autoPencilUsed: 0,
       status: 'playing',
       puzzleId,
       sessionToken,
@@ -261,6 +265,23 @@ export const useGameStore = create<GameStore>()(
     if (allFilled && !hasAnyConflict) get().setComplete()
   },
 
+  applyAutoPencil: () => {
+    const { cells, status, locked, autoPencilUsed } = get()
+    if (status !== 'playing' || locked) return
+
+    const updated = cells.map((cell, i) => {
+      if (cell.isGiven || cell.value !== null) return cell
+      const peerValues = new Set(
+        cells.map((c, j) => (isPeer(i, j) && c.value !== null ? c.value : null))
+          .filter((v): v is number => v !== null),
+      )
+      const candidates = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter((n) => !peerValues.has(n))
+      return { ...cell, pencilMarks: candidates }
+    })
+
+    set({ cells: updated, autoPencilUsed: autoPencilUsed + 1 })
+  },
+
   setPaused: (paused) => {
     set({ status: paused ? 'paused' : 'playing', locked: paused })
   },
@@ -269,18 +290,9 @@ export const useGameStore = create<GameStore>()(
     set({ status: 'complete', locked: true })
 
     // Fire-and-forget: save completion in the background
-    const { cells, hintsUsed, errors, sessionToken } = get()
+    const { cells, hintsUsed, errors, autoPencilUsed, sessionToken } = get()
     const elapsed = useTimerStore.getState().elapsed
     const board = cells.map((c) => c.value ?? 0).join('')
-
-    console.log('[sudoku] saving completion…', {
-      hasToken: !!sessionToken,
-      boardLength: board.length,
-      boardPreview: board.slice(0, 20) + '…',
-      elapsed,
-      hintsUsed,
-      errors,
-    })
 
     fetch('/api/puzzle/validate', {
       method: 'POST',
@@ -292,6 +304,7 @@ export const useGameStore = create<GameStore>()(
         elapsedSeconds: elapsed,
         hintsUsed,
         errorsMade: errors,
+        autoPencilUsed,
       }),
     })
       .then(async (r) => {
@@ -312,6 +325,7 @@ export const useGameStore = create<GameStore>()(
     pencilMode: false,
     errors: 0,
     hintsUsed: 0,
+    autoPencilUsed: 0,
     status: 'idle',
     puzzleId: null,
     sessionToken: null,
@@ -331,6 +345,7 @@ export const useGameStore = create<GameStore>()(
       pencilMode: state.pencilMode,
       errors: state.errors,
       hintsUsed: state.hintsUsed,
+      autoPencilUsed: state.autoPencilUsed,
       status: state.status,
       puzzleId: state.puzzleId,
       sessionToken: state.sessionToken,

@@ -7,8 +7,9 @@ import { eq, and, asc, sql } from 'drizzle-orm'
 
 const HINT_PENALTY = 30
 const ERROR_PENALTY = 15
-function calculateAdjustedTime(elapsed: number, hints: number, errors: number) {
-  return elapsed + hints * HINT_PENALTY + errors * ERROR_PENALTY
+const AUTO_PENCIL_PENALTY = 90
+function calculateAdjustedTime(elapsed: number, hints: number, errors: number, autoPencil: number) {
+  return elapsed + hints * HINT_PENALTY + errors * ERROR_PENALTY + autoPencil * AUTO_PENCIL_PENALTY
 }
 
 function getWeekStart(date: Date): string {
@@ -34,12 +35,13 @@ async function handleValidate(req: VercelRequest, res: VercelResponse) {
   const session = await requireAuth(req, res)
   if (!session) return
 
-  const { sessionToken, board, elapsedSeconds, hintsUsed, errorsMade } = req.body as {
+  const { sessionToken, board, elapsedSeconds, hintsUsed, errorsMade, autoPencilUsed } = req.body as {
     sessionToken?: string
     board?: string
     elapsedSeconds?: number
     hintsUsed?: number
     errorsMade?: number
+    autoPencilUsed?: number
   }
 
   if (!sessionToken || !board || typeof elapsedSeconds !== 'number') {
@@ -104,13 +106,15 @@ async function handleValidate(req: VercelRequest, res: VercelResponse) {
 
   const hints = Math.max(0, Math.min(81, hintsUsed ?? 0))
   const errors = Math.max(0, Math.min(3, errorsMade ?? 0))
-  const adjustedTime = calculateAdjustedTime(trusted, hints, errors)
+  const autoPencil = Math.max(0, Math.min(20, autoPencilUsed ?? 0))
+  const adjustedTime = calculateAdjustedTime(trusted, hints, errors, autoPencil)
 
   // Mark session as completed
   await db
     .update(puzzleSessions)
     .set({ status: 'completed', hintsUsed: hints, errorsMade: errors })
     .where(eq(puzzleSessions.sessionToken, sessionToken))
+
 
   // Upsert completion: only keep if better (lower adjustedTime)
   const [existing] = await db
@@ -127,23 +131,28 @@ async function handleValidate(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ adjustedTime: existing.adjustedTime, rank, dailyRank: rank })
   }
 
+  const completionData = {
+    elapsedSeconds: trusted,
+    errorsMade: errors,
+    hintsUsed: hints,
+    autoPencilUsed: autoPencil,
+    adjustedTime,
+    completedAt: new Date(),
+  }
+
   if (existing) {
-    await db
-      .update(completions)
-      .set({ elapsedSeconds: trusted, errorsMade: errors, hintsUsed: hints, adjustedTime, completedAt: new Date() })
-      .where(eq(completions.id, existing.id))
+    await db.update(completions).set(completionData).where(eq(completions.id, existing.id))
   } else {
+    const difficulty = psRow.dailyPuzzleId
+      ? 'daily'
+      : (await db.select({ difficulty: puzzles.difficulty }).from(puzzles).where(eq(puzzles.id, payload.puzzleId)).limit(1))[0]?.difficulty ?? 'facil'
     await db.insert(completions).values({
       userId: session.user.id,
       puzzleId: payload.puzzleId,
       dailyPuzzleId: psRow.dailyPuzzleId,
       sessionToken,
-      elapsedSeconds: trusted,
-      errorsMade: errors,
-      hintsUsed: hints,
-      adjustedTime,
-      difficulty: psRow.dailyPuzzleId ? 'daily' : (await db.select({ difficulty: puzzles.difficulty }).from(puzzles).where(eq(puzzles.id, payload.puzzleId)).limit(1))[0]?.difficulty ?? 'facil',
-      completedAt: new Date(),
+      difficulty,
+      ...completionData,
     })
   }
 

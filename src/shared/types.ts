@@ -45,6 +45,7 @@ export interface RankingEntry {
   elapsedSeconds: number
   hintsUsed: number
   errorsMade: number
+  autoPencilUsed: number
   completedAt: string
 }
 

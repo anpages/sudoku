@@ -1,3 +1,4 @@
+import React from 'react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/game-store'
 import { useTimerStore } from '@/store/timer-store'
@@ -9,9 +10,11 @@ interface Props {
 
 export function ActionBar({ onHint, onRestart }: Props) {
   const pencilMode = useGameStore((s) => s.pencilMode)
+  const autoPencilUsed = useGameStore((s) => s.autoPencilUsed)
   const status = useGameStore((s) => s.status)
   const locked = useGameStore((s) => s.locked)
   const eraseCell = useGameStore((s) => s.eraseCell)
+  const applyAutoPencil = useGameStore((s) => s.applyAutoPencil)
   const setPaused = useGameStore((s) => s.setPaused)
   const pauseTimer = useTimerStore((s) => s.pause)
 
@@ -22,7 +25,7 @@ export function ActionBar({ onHint, onRestart }: Props) {
     pauseTimer()
   }
 
-  const actions = [
+  const actions: { key: string; active: boolean; title: string; badge?: string | null; icon: React.ReactNode; onClick: () => void }[] = [
     {
       key: 'erase',
       active: false,
@@ -47,6 +50,19 @@ export function ActionBar({ onHint, onRestart }: Props) {
         </svg>
       ),
       onClick: () => useGameStore.setState((s) => ({ pencilMode: !s.pencilMode })),
+    },
+    {
+      key: 'auto-pencil',
+      active: false,
+      title: 'Auto-lápiz (+90s)',
+      badge: autoPencilUsed > 0 ? `×${autoPencilUsed}` : null,
+      icon: (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+          <path d="M15 4V2m0 14v-2M8 9h2m10 0h2m-4.2 2.8 1.2 1.2m-1.2-8.8 1.2-1.2M3 21l9-9m-6.8.2-1.2-1.2" />
+          <path d="M12.2 6.2 11 5" />
+        </svg>
+      ),
+      onClick: applyAutoPencil,
     },
     {
       key: 'hint',
@@ -88,16 +104,16 @@ export function ActionBar({ onHint, onRestart }: Props) {
   ]
 
   return (
-    <div className="flex justify-center gap-2 w-full">
-      {actions.map(({ key, active, title, icon, onClick }) => (
+    <div className="flex justify-center gap-1.5 lg:gap-2 w-full">
+      {actions.map(({ key, active, title, icon, onClick, badge }) => (
         <motion.button
           key={key}
           onClick={() => !disabled && onClick()}
           disabled={disabled}
           whileTap={!disabled ? { scale: 0.9 } : undefined}
           className={[
-            'flex items-center justify-center rounded-xl transition-colors',
-            'w-12 h-12 lg:w-14 lg:h-14',
+            'relative flex items-center justify-center rounded-xl transition-colors',
+            'w-11 h-11 lg:w-14 lg:h-14',
             active
               ? 'text-(--color-primary) bg-(--color-cell-highlight)'
               : disabled
@@ -107,6 +123,11 @@ export function ActionBar({ onHint, onRestart }: Props) {
           title={title}
         >
           {icon}
+          {badge && (
+            <span className="absolute -top-1 -right-1 text-[9px] font-bold leading-none bg-violet-500 text-white rounded-full px-1 py-0.5">
+              {badge}
+            </span>
+          )}
         </motion.button>
       ))}
     </div>

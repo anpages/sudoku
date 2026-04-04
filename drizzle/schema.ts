@@ -114,6 +114,7 @@ export const completions = pgTable(
     elapsedSeconds: integer('elapsed_seconds').notNull(),
     errorsMade: smallint('errors_made').notNull(),
     hintsUsed: smallint('hints_used').notNull(),
+    autoPencilUsed: smallint('auto_pencil_used').notNull().default(0),
     adjustedTime: integer('adjusted_time').notNull(),
     difficulty: text('difficulty').notNull(),
     completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
