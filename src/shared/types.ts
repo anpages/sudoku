@@ -41,7 +41,6 @@ export interface RankingEntry {
   rank: number
   userId: string
   name: string
-  avatarUrl: string | null
   adjustedTime: number
   elapsedSeconds: number
   hintsUsed: number
@@ -53,7 +52,6 @@ export interface WeeklyRankingEntry {
   rank: number
   userId: string
   name: string
-  avatarUrl: string | null
   totalAdjustedTime: number
   gamesPlayed: number
 }

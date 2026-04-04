@@ -1,8 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth, errorResponse } from '../lib/middleware.js'
 import { db } from '../lib/db.js'
-import { completions, dailyPuzzles, users } from '../../drizzle/schema.js'
+import { completions, dailyPuzzles } from '../../drizzle/schema.js'
 import { eq, asc } from 'drizzle-orm'
+import { getPseudonym } from '../lib/pseudonym.js'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') return errorResponse(res, 'Método no permitido', 405)
@@ -23,8 +24,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const rows = await db
     .select({
       userId: completions.userId,
-      name: users.name,
-      avatarUrl: users.image,
       adjustedTime: completions.adjustedTime,
       elapsedSeconds: completions.elapsedSeconds,
       hintsUsed: completions.hintsUsed,
@@ -32,12 +31,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       completedAt: completions.completedAt,
     })
     .from(completions)
-    .innerJoin(users, eq(completions.userId, users.id))
     .where(eq(completions.dailyPuzzleId, daily.id))
     .orderBy(asc(completions.adjustedTime))
     .limit(100)
 
-  const ranked = rows.map((r, i) => ({ ...r, rank: i + 1 }))
+  const ranked = rows.map((r, i) => ({ ...r, name: getPseudonym(r.userId), rank: i + 1 }))
   res.setHeader('Cache-Control', 'public, max-age=5, stale-while-revalidate=10')
   res.status(200).json(ranked)
 }

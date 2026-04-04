@@ -60,13 +60,9 @@ function WeeklyRankingList({ currentUserId }: { currentUserId?: string }) {
               {e.rank <= 3 ? ['🥇', '🥈', '🥉'][e.rank - 1] : `#${e.rank}`}
             </span>
 
-            {e.avatarUrl ? (
-              <img src={e.avatarUrl} alt={e.name} className="w-8 h-8 rounded-full object-cover" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-(--color-primary) flex items-center justify-center text-white text-xs font-bold">
-                {e.name[0].toUpperCase()}
-              </div>
-            )}
+            <div className="w-8 h-8 rounded-full bg-(--color-primary)/15 flex items-center justify-center text-(--color-primary) text-xs font-bold shrink-0">
+              {e.name[0].toUpperCase()}
+            </div>
 
             <span className="flex-1 font-medium text-sm text-(--color-text) truncate">{e.name}</span>
             <span className="font-mono text-sm font-semibold text-(--color-primary)">

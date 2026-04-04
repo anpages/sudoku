@@ -77,15 +77,12 @@ export function Home() {
                 <p className="text-3xl font-extrabold text-amber-500 tabular-nums">{stats.weeklyGames}</p>
                 <p className="text-[11px] text-(--color-text-muted) mt-1 font-medium">Esta semana</p>
               </div>
-              <button
-                onClick={() => navigate('/ranking')}
-                className="relative py-4 rounded-2xl bg-emerald-500/8 text-center overflow-hidden hover:bg-emerald-500/12 transition-colors"
-              >
+              <div className="relative py-4 rounded-2xl bg-emerald-500/8 text-center overflow-hidden">
                 <p className="text-3xl font-extrabold text-emerald-500 tabular-nums">
                   {stats.weeklyRank ? `#${stats.weeklyRank}` : '—'}
                 </p>
                 <p className="text-[11px] text-(--color-text-muted) mt-1 font-medium">Ranking</p>
-              </button>
+              </div>
             </motion.div>
           )}
 
@@ -149,6 +146,29 @@ export function Home() {
             <div className="flex-1 text-left">
               <p className="text-sm font-semibold text-(--color-text)">Reto diario</p>
               <p className="text-[11px] text-(--color-text-muted)">Compite con todos los jugadores</p>
+            </div>
+            <svg className="w-4 h-4 text-(--color-text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M9 18l6-6-6-6" /></svg>
+          </motion.button>
+
+          {/* Rankings */}
+          <motion.button
+            variants={fadeUp}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/ranking')}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors"
+          >
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+              <svg className="w-[18px] h-[18px] text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <path d="M6 9H4a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h2" />
+                <path d="M18 9h2a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2" />
+                <path d="M6 5h12v8a6 6 0 0 1-12 0V5Z" />
+                <path d="M9 21h6" />
+                <path d="M12 17v4" />
+              </svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-(--color-text)">Ranking</p>
+              <p className="text-[11px] text-(--color-text-muted)">Clasificación diaria y semanal</p>
             </div>
             <svg className="w-4 h-4 text-(--color-text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M9 18l6-6-6-6" /></svg>
           </motion.button>

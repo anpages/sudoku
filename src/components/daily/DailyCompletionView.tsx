@@ -119,13 +119,9 @@ export function DailyCompletionView({ daily, myCompletion, onPlay }: Props) {
                     {entry.rank <= 3 ? ['🥇', '🥈', '🥉'][entry.rank - 1] : `#${entry.rank}`}
                   </span>
 
-                  {entry.avatarUrl ? (
-                    <img src={entry.avatarUrl} alt={entry.name} className="w-7 h-7 rounded-full object-cover shrink-0" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-(--color-primary) flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {entry.name[0].toUpperCase()}
-                    </div>
-                  )}
+                  <div className="w-7 h-7 rounded-full bg-(--color-primary)/15 flex items-center justify-center text-(--color-primary) text-xs font-bold shrink-0">
+                    {entry.name[0].toUpperCase()}
+                  </div>
 
                   <span className="flex-1 text-sm font-medium text-(--color-text) truncate">{entry.name}</span>
 
