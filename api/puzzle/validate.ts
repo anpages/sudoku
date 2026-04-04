@@ -117,17 +117,36 @@ async function handleValidate(req: VercelRequest, res: VercelResponse) {
     .where(eq(puzzleSessions.sessionToken, sessionToken))
 
 
-  // Upsert completion: only keep if better (lower adjustedTime)
+  // Upsert completion: only keep score if better (lower adjustedTime), but always count the play
   const [existing] = await db
-    .select({ id: completions.id, adjustedTime: completions.adjustedTime })
+    .select({ id: completions.id, adjustedTime: completions.adjustedTime, playsCount: completions.playsCount })
     .from(completions)
     .where(
       and(eq(completions.userId, session.user.id), eq(completions.puzzleId, payload.puzzleId)),
     )
     .limit(1)
 
+  const weekStart = getWeekStart(new Date())
+  const weeklyUpsert = db
+    .insert(weeklyRankings)
+    .values({ userId: session.user.id, weekStart, totalAdjustedTime: adjustedTime, gamesPlayed: 1 })
+    .onConflictDoUpdate({
+      target: [weeklyRankings.userId, weeklyRankings.weekStart],
+      set: {
+        totalAdjustedTime: sql`${weeklyRankings.totalAdjustedTime} + ${adjustedTime}`,
+        gamesPlayed: sql`${weeklyRankings.gamesPlayed} + 1`,
+        updatedAt: new Date(),
+      },
+    })
+
   if (existing && existing.adjustedTime <= adjustedTime) {
-    // Existing record is better — return it but don't overwrite
+    // Existing score is better — don't overwrite score, but count this play
+    await Promise.all([
+      db.update(completions)
+        .set({ playsCount: existing.playsCount + 1, completedAt: new Date() })
+        .where(eq(completions.id, existing.id)),
+      weeklyUpsert,
+    ])
     const rank = await getDailyRank(psRow.dailyPuzzleId, session.user.id)
     return res.status(200).json({ adjustedTime: existing.adjustedTime, rank, dailyRank: rank })
   }
@@ -139,6 +158,7 @@ async function handleValidate(req: VercelRequest, res: VercelResponse) {
     autoPencilUsed: autoPencil,
     adjustedTime,
     completedAt: new Date(),
+    playsCount: (existing?.playsCount ?? 0) + 1,
   }
 
   if (existing) {
@@ -157,19 +177,7 @@ async function handleValidate(req: VercelRequest, res: VercelResponse) {
     })
   }
 
-  // Update weekly rankings
-  const weekStart = getWeekStart(new Date())
-  await db
-    .insert(weeklyRankings)
-    .values({ userId: session.user.id, weekStart, totalAdjustedTime: adjustedTime, gamesPlayed: 1 })
-    .onConflictDoUpdate({
-      target: [weeklyRankings.userId, weeklyRankings.weekStart],
-      set: {
-        totalAdjustedTime: sql`${weeklyRankings.totalAdjustedTime} + ${adjustedTime}`,
-        gamesPlayed: sql`${weeklyRankings.gamesPlayed} + 1`,
-        updatedAt: new Date(),
-      },
-    })
+  await weeklyUpsert
 
   const rank = await getDailyRank(psRow.dailyPuzzleId, session.user.id)
   res.status(200).json({ adjustedTime, rank, dailyRank: rank })

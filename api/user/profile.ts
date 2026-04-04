@@ -5,6 +5,7 @@ import { completions, puzzleSessions } from '../../drizzle/schema.js'
 import { eq, and, asc, sql } from 'drizzle-orm'
 import type { Difficulty } from '../../src/shared/types.js'
 import { DIFFICULTY_CONFIG } from '../../src/shared/constants.js'
+import { getPseudonym } from '../lib/pseudonym.js'
 
 function getConsecutiveDailyStreak(
   completedDates: string[],
@@ -42,12 +43,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       difficulty: completions.difficulty,
       dailyPuzzleId: completions.dailyPuzzleId,
       completedAt: completions.completedAt,
+      playsCount: completions.playsCount,
     })
     .from(completions)
     .where(eq(completions.userId, userId))
     .orderBy(asc(completions.adjustedTime))
 
-  const gamesPlayed = userCompletions.length
+  const gamesPlayed = userCompletions.reduce((sum, c) => sum + (c.playsCount ?? 1), 0)
 
   // Count abandoned sessions (started a new game while one was in progress)
   const [abandonedCount] = await db
@@ -81,6 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.status(200).json({
     id: session.user.id,
     name: session.user.name,
+    pseudonym: getPseudonym(session.user.id),
     email: session.user.email,
     avatarUrl: session.user.image ?? null,
     createdAt: session.user.createdAt,

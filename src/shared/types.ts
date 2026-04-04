@@ -89,6 +89,7 @@ export interface RecentGame {
 export interface UserProfile {
   id: string
   name: string
+  pseudonym: string
   email: string
   avatarUrl: string | null
   createdAt: string

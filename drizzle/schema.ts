@@ -116,6 +116,7 @@ export const completions = pgTable(
     hintsUsed: smallint('hints_used').notNull(),
     autoPencilUsed: smallint('auto_pencil_used').notNull().default(0),
     adjustedTime: integer('adjusted_time').notNull(),
+    playsCount: integer('plays_count').notNull().default(1),
     difficulty: text('difficulty').notNull(),
     completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
   },

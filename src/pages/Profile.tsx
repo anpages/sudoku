@@ -23,16 +23,12 @@ export function Profile() {
       <main className="max-w-2xl mx-auto w-full px-4 py-8">
         {/* Avatar + name */}
         <div className="flex items-center gap-4 mb-8">
-          {user?.image ? (
-            <img src={user.image} alt={user.name ?? ''} className="w-16 h-16 rounded-full object-cover" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-(--color-primary) flex items-center justify-center text-white text-2xl font-bold">
-              {(user?.name ?? 'U')[0].toUpperCase()}
-            </div>
-          )}
+          <div className="w-16 h-16 rounded-full bg-(--color-primary)/15 flex items-center justify-center text-(--color-primary) text-2xl font-bold shrink-0">
+            {(profile?.pseudonym ?? user?.name ?? 'U')[0].toUpperCase()}
+          </div>
           <div>
-            <h1 className="text-xl font-bold text-(--color-text)">{user?.name}</h1>
-            <p className="text-sm text-(--color-text-muted)">{user?.email}</p>
+            <h1 className="text-xl font-bold text-(--color-text)">{profile?.pseudonym ?? '…'}</h1>
+            <p className="text-xs text-(--color-text-muted)">Así te ven los demás jugadores</p>
           </div>
         </div>
 

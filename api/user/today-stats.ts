@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAuth, errorResponse } from '../lib/middleware.js'
 import { db } from '../lib/db.js'
-import { completions, weeklyRankings, users } from '../../drizzle/schema.js'
+import { completions, weeklyRankings, puzzleSessions } from '../../drizzle/schema.js'
 import { eq, and, gte, asc, sql } from 'drizzle-orm'
 
 function getWeekStart(): string {
@@ -22,14 +22,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const todayStart = new Date()
   todayStart.setUTCHours(0, 0, 0, 0)
 
-  // Games completed today
+  // Games completed today: count completed puzzle sessions started today
   const [todayCount] = await db
     .select({ count: sql<number>`count(*)::int` })
-    .from(completions)
+    .from(puzzleSessions)
     .where(
       and(
-        eq(completions.userId, userId),
-        gte(completions.completedAt, todayStart),
+        eq(puzzleSessions.userId, userId),
+        eq(puzzleSessions.status, 'completed'),
+        gte(puzzleSessions.startedAt, todayStart),
       ),
     )
 
