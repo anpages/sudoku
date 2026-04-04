@@ -173,6 +173,27 @@ export function Home() {
             <svg className="w-4 h-4 text-(--color-text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M9 18l6-6-6-6" /></svg>
           </motion.button>
 
+          {/* Recent games */}
+          <motion.button
+            variants={fadeUp}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/partidas')}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-(--color-border) bg-(--color-surface) hover:bg-(--color-surface-alt) transition-colors"
+          >
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <svg className="w-[18px] h-[18px] text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <path d="M12 20V10" />
+                <path d="M18 20V4" />
+                <path d="M6 20v-4" />
+              </svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-(--color-text)">Últimas partidas</p>
+              <p className="text-[11px] text-(--color-text-muted)">Tus 5 partidas más recientes</p>
+            </div>
+            <svg className="w-4 h-4 text-(--color-text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M9 18l6-6-6-6" /></svg>
+          </motion.button>
+
           {/* Choose difficulty — dots + label + play */}
           <motion.div variants={fadeUp} className="w-full flex items-center justify-between">
             <div className="flex items-center gap-3">

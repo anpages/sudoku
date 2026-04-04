@@ -58,8 +58,10 @@ export function ActionBar({ onHint, onRestart }: Props) {
     {
       key: 'auto-pencil',
       active: false,
-      title: 'Auto-lápiz (×1.5 penalización en ranking)',
-      badge: autoPencilUsed > 0 ? `×${autoPencilUsed}` : null,
+      title: autoPencilUsed >= 1 ? 'Auto-lápiz ya usado' : 'Auto-lápiz (×1.5 penalización en ranking)',
+      badge: autoPencilUsed >= 1 ? '✓' : null,
+      badgeColor: 'bg-slate-400',
+      forceDisabled: autoPencilUsed >= 1,
       icon: (
         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
           <path d="M15 4V2m0 14v-2M8 9h2m10 0h2m-4.2 2.8 1.2 1.2m-1.2-8.8 1.2-1.2M3 21l9-9m-6.8.2-1.2-1.2" />

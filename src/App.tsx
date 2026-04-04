@@ -9,6 +9,7 @@ import { Daily } from '@/pages/Daily'
 import { Rankings } from '@/pages/Rankings'
 import { Tournament } from '@/pages/Tournament'
 import { Profile } from '@/pages/Profile'
+import { RecentGames } from '@/pages/RecentGames'
 import { ToastContainer } from '@/components/ui/Toast'
 
 function ThemeInitializer() {
@@ -36,6 +37,7 @@ export default function App() {
                 <Route path="/ranking" element={<Rankings />} />
                 <Route path="/torneo" element={<Tournament />} />
                 <Route path="/perfil" element={<Profile />} />
+                <Route path="/partidas" element={<RecentGames />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AuthGuard>

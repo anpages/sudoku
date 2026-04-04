@@ -75,6 +75,17 @@ export interface DailyPuzzle {
   myCompletion: DailyCompletion | null
 }
 
+export interface RecentGame {
+  difficulty: string
+  elapsedSeconds: number
+  adjustedTime: number
+  hintsUsed: number
+  errorsMade: number
+  autoPencilUsed: number
+  completedAt: string
+  isDaily: boolean
+}
+
 export interface UserProfile {
   id: string
   name: string

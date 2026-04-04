@@ -269,6 +269,7 @@ export const useGameStore = create<GameStore>()(
   applyAutoPencil: () => {
     const { cells, status, locked, autoPencilUsed } = get()
     if (status !== 'playing' || locked) return
+    if (autoPencilUsed >= 1) return
 
     const updated = cells.map((cell, i) => {
       if (cell.isGiven || cell.value !== null) return cell
